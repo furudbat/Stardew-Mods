@@ -1,10 +1,10 @@
 {
-    "Name": "Level Extender",
-    "Author": "Devin Lematty",
-    "Version": "1.5.3-v001",
-    "Description": "Extends profession levels to 100.",
-    "UniqueID": "Unidarkshin.LevelExtender",
-    "EntryDll": "LevelExtender.dll",
-    "MinimumApiVersion": "3.7",
-    "UpdateKeys": [ "Nexus:1471" ]
+  "Name": "Level Extender",
+  "Author": "Devin Lematty",
+  "Version": "2.0.0-unofficial.1-furudbat",
+  "Description": "Extends profession levels to 100.",
+  "UniqueID": "Unidarkshin.LevelExtender",
+  "EntryDll": "LevelExtender.dll",
+  "MinimumApiVersion": "3.7",
+  "UpdateKeys": [ "Nexus:1471" ]
 }

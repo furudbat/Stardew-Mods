@@ -1,53 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using StardewValley;
-using StardewModdingAPI;
+using LevelExtender.Common;
+using LevelExtender.Framework.Mods;
 
 namespace LevelExtender
 {
-    public class LEModApi
+    public interface LEModApi
     {
-        public ModEntry ME;
+        void Spawn_Rate(double osr);
+        int[] CurrentXP();
+        int[] RequiredXP();
 
-        public LEModApi(ModEntry me)
-        {
-            ME = me;
-        }
-
-        public ModEntry GetMod()
-        {
-            return ME;
-        }
-
-        //This value will offset spawn-rate by the specified amount (1 second intervals)
-        public double overSR = -1.0;
-
-        public void Spawn_Rate(double osr)
-        {
-            overSR = osr;
-        }
-
-        /*public int[] CurrentXP()
-        {
-            return ME.GetCurXP();
-        }
-
-        public int[] RequiredXP()
-        {
-            return ME.GetReqXP();
-        }*/
-
-        public event EventHandler<EXPEventArgs> OnXPChanged
-        {
-            add => ME.LEE.OnXPChanged += value;
-            remove => ME.LEE.OnXPChanged -= value;
-        }
+        event EventHandler<EXPEventArgs> OnXPChanged;
 
         //*** SKILL COMPATIBILITY ***//
+        void RegisterMod(ISkillMod mod);
 
+
+        //*** LEGECY SKILL COMPATIBILITY ***//
         //Please use this function ONCE in the Save Loaded event (to be safe, PLEASE ADD A 5 SECOND DELAY BEFORE initialization):
         //
         //FORMAT:
@@ -55,10 +24,7 @@ namespace LevelExtender
         //
         //EXAMPLE:
         //initializeSkill("cooking", 1305, 1.0, new List<int>() {100, 1000, 2000, 5000, 10000}, new int[] {-4 (fishing cat.), -105 (custom cat.)})
-        public int initializeSkill(string name, int xp, double? xp_mod = null, List<int> xp_table = null, int[] cats = null)
-        {
-            return ME.initializeSkill(name, xp, xp_mod, xp_table, cats);
-        }
+        //int initializeSkill(string name, int xp, double? xp_mod = null, List<int> xp_table = null, int[] cats = null);
 
         //Any requests to change a skill MUST FIRST check the current value of said variable and assign it to the corresponding variable
         //in your mod. (If this is not done, the skill variables across mods may not be synced)
@@ -68,10 +34,6 @@ namespace LevelExtender
         //
         //For setting skill data, use this parameter format:
         //args = {"set", "<name of skill>", "<name of variable>", "<string representation of value>"} -> Example: args = {"set", "cooking", "level", "25"}
-        public dynamic TalkToSkill(string[] args)
-        {
-            return ME.TalkToSkill(args);
-        }
-
+        //dynamic TalkToSkill(string[] args);
     }
 }
