@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using LevelExtender.Common;
-using LevelExtender.Framework.SkillTypes;
+using LevelExtender.LEAPI;
+using LevelExtender.Logging;
 using Microsoft.Xna.Framework;
 using StardewValley;
 
 namespace LevelExtender
 {
-    interface ILevelExtender
+    internal interface ILevelExtender
     {
-        void EndXPBar(SkillType skillType);
+        Logger Logger { get; }
 
         bool SetLevel(string name, int value);
+        bool SetXP(string name, int value);
         bool SetNeededXPFactor(string name, double value);
 
         List<LESkill> Skills { get; }

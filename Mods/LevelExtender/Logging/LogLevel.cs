@@ -1,6 +1,5 @@
 namespace LevelExtender.Logging
 {
-    // from SkillPrestige by Alphablackwolf - https://github.com/Alphablackwolf/SkillPrestige
     internal enum LogLevel
     {
         Critical = 1,

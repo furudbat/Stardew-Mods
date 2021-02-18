@@ -1,71 +1,75 @@
 using System;
+using StardewModdingAPI;
 
 namespace LevelExtender.Logging
 {
-    // from SkillPrestige by Alphablackwolf - https://github.com/Alphablackwolf/SkillPrestige
-    /// <summary>A wrapper for the Stardew Valley logger to simplify the interface and restrict what is logged.</summary>
-    public static class Logger
+    internal class Logger
     {
-        /*********
-        ** Public methods
-        *********/
-        public static void LogDebug(string message)
+        public ModConfig Config { get; private set; } 
+        public IMonitor LogMonitor { get; private set; }
+        public Logger(ModConfig config, IMonitor logMonitor)
         {
-            if (ModEntry.Config.LogLevel >= LogLevel.Debug)
-                ModEntry.LogMonitor.Log(message, StardewModdingAPI.LogLevel.Debug);
+            Config = config;
+            LogMonitor = logMonitor;
+        }
+        public void Reset(ModConfig config, IMonitor logMonitor)
+        {
+            Config = config;
+            LogMonitor = logMonitor;
+        }
+        public void LogDebug(string message)
+        {
+            if (Config.LogLevel >= LogLevel.Debug)
+                LogMonitor.Log(message, StardewModdingAPI.LogLevel.Debug);
         }
 
-        public static void LogTrace(string message)
+        public void LogTrace(string message)
         {
-            if (ModEntry.Config.LogLevel >= LogLevel.Trace)
-                ModEntry.LogMonitor.Log(message, StardewModdingAPI.LogLevel.Trace);
+            if (Config.LogLevel >= LogLevel.Trace)
+                LogMonitor.Log(message, StardewModdingAPI.LogLevel.Trace);
         }
-        public static void LogVerbose(string message)
+        public void LogVerbose(string message)
         {
-            if (ModEntry.Config.LogLevel >= LogLevel.Verbose)
-                ModEntry.LogMonitor.Log(message, StardewModdingAPI.LogLevel.Trace);
-        }
-
-        public static void LogInformation(string message)
-        {
-            if (ModEntry.Config.LogLevel >= LogLevel.Information)
-                ModEntry.LogMonitor.Log(message, StardewModdingAPI.LogLevel.Info);
+            if (Config.LogLevel >= LogLevel.Verbose)
+                LogMonitor.Log(message, StardewModdingAPI.LogLevel.Trace);
         }
 
-        public static void LogWarning(string message)
+        public void LogInformation(string message)
         {
-            if (ModEntry.Config.LogLevel >= LogLevel.Warning)
-                ModEntry.LogMonitor.Log(message, StardewModdingAPI.LogLevel.Warn);
+            if (Config.LogLevel >= LogLevel.Information)
+                LogMonitor.Log(message, StardewModdingAPI.LogLevel.Info);
         }
 
-        public static void LogError(string message)
+        public void LogWarning(string message)
         {
-            if (ModEntry.Config.LogLevel >= LogLevel.Error)
-                ModEntry.LogMonitor.Log(message.AddErrorText(), StardewModdingAPI.LogLevel.Error);
+            if (Config.LogLevel >= LogLevel.Warning)
+                LogMonitor.Log(message, StardewModdingAPI.LogLevel.Warn);
         }
 
-        public static void LogCritical(string message)
+        public void LogError(string message)
         {
-            if (ModEntry.Config.LogLevel >= LogLevel.Critical)
-                ModEntry.LogMonitor.Log(message.AddErrorText(), StardewModdingAPI.LogLevel.Alert);
+            if (Config.LogLevel >= LogLevel.Error)
+                LogMonitor.Log(AddErrorText(message), StardewModdingAPI.LogLevel.Error);
         }
 
-        public static void LogCriticalWarning(string message)
+        public void LogCritical(string message)
         {
-            if (ModEntry.Config.LogLevel >= LogLevel.Critical)
-                ModEntry.LogMonitor.Log(message, StardewModdingAPI.LogLevel.Alert);
+            if (Config.LogLevel >= LogLevel.Critical)
+                LogMonitor.Log(AddErrorText(message), StardewModdingAPI.LogLevel.Alert);
         }
 
-        public static void LogDisplay(string message)
+        public void LogCriticalWarning(string message)
         {
-            ModEntry.LogMonitor.Log(message);
+            if (Config.LogLevel >= LogLevel.Critical)
+                LogMonitor.Log(message, StardewModdingAPI.LogLevel.Alert);
         }
 
+        public void LogDisplay(string message)
+        {
+            LogMonitor.Log(message);
+        }
 
-        /*********
-        ** Private methods
-        *********/
-        private static string AddErrorText(this string message)
+        private string AddErrorText(string message)
         {
             return $"{message}{Environment.NewLine}Please file a bug report on NexusMods.";
         }

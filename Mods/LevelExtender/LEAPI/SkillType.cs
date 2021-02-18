@@ -1,13 +1,12 @@
 using System;
 using System.Linq;
-using LevelExtender.Logging;
 
-namespace LevelExtender.Framework.SkillTypes
+namespace LevelExtender.LEAPI
 {
     // from SkillPrestige by Alphablackwolf - https://github.com/Alphablackwolf/SkillPrestige
     /// <summary>Represents a skill type in Stardew Valley (e.g. Farming, Fishing, Foraging).</summary>
     [Serializable]
-    public partial class SkillType
+    public class SkillType
     {
         /*********
         ** Accessors
@@ -67,27 +66,6 @@ namespace LevelExtender.Framework.SkillTypes
         public static bool operator !=(SkillType left, SkillType right)
         {
             return !(left == right);
-        }
-
-
-        /*********
-        ** Private methods
-        *********/
-        static SkillType()
-        {
-            Logger.LogInformation("Registering skill types...");
-            var concreteSkillTypeRegistrations = AppDomain.CurrentDomain
-                .GetNonSystemAssemblies()
-                .SelectMany(x => x.GetTypesSafely())
-                .Where(x => typeof(ISkillTypeRegistration).IsAssignableFrom(x) && x.IsClass && !x.IsAbstract)
-                .ToList();
-            Logger.LogVerbose($"concerete skill type registration count: {concreteSkillTypeRegistrations.Count}");
-            foreach (var registration in concreteSkillTypeRegistrations)
-            {
-                Logger.LogVerbose($"Creating instance of type {registration.FullName}...");
-                ((ISkillTypeRegistration)Activator.CreateInstance(registration)).RegisterSkillTypes();
-            }
-            Logger.LogInformation("Skill types registered.");
         }
     }
 }

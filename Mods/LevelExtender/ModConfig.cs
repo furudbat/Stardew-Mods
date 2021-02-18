@@ -15,21 +15,19 @@ namespace LevelExtender
         public LogLevel LogLevel { get; set; } = LogLevel.Warning;
 
         /// <summary>Whether testing mode is enabled, which adds testing specific commands to the system.</summary>
-        public bool TestingMode { get; set; }
+        public bool TestingMode { get; set; } = false;
 
-        public bool drawBars { get; set; } = true;
+        public bool DrawXPBars { get; set; } = true;
+        public bool DrawXPGain { get; set; } = true;
 
-        public bool drawExtraItemNotifications { get; set; } = true;
-
-        public int minItemPriceForNotifications { get; set; } = 50;
-
-        //public List<string> skills { get; set; } = new List<string>();
+        public bool DrawExtraItemNotifications { get; set; } = false;
+        public int MinItemPriceForNotifications { get; set; } = 50;
         public bool DrawNotificationsAsHUDMessage { get; set; } = false;
+        public bool ExtraItemNotificationAmountMessage { get; set; } = true;
 
         public bool CropsGrow { get; set; } = true;
         public bool MoreEXPByOneHitKills { get; set; } = true;
         public bool DropExtraItems { get; set; } = true;
-        public bool DropExtraItemMessageExtras { get; set; } = true;
 
         public bool OverworldMonsters { get; set; } = false;
         public double OverworldMonstersSpawnRate { get; set; } = -1;

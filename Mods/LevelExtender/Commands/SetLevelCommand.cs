@@ -3,11 +3,11 @@ using LevelExtender.Logging;
 
 namespace LevelExtender.Commands
 {
-    internal class LegacySetLevelCommand : SMAPICommand<ILevelExtender>
+    internal class SetLevelCommand : SMAPICommand<ILevelExtender>
     {
         /// <summary>Construct an instance.</summary>
-        public LegacySetLevelCommand()
-            : base("lev", GetDescription()) { }
+        public SetLevelCommand()
+            : base("set_level", GetDescription()) { }
 
         /// <summary>Applies the effect of a command when it is called from the console.</summary>
         protected override void Apply(string[] args)
@@ -20,16 +20,16 @@ namespace LevelExtender.Commands
 
             if (args.Length < 2)
             {
-                Logger.LogInformation("<number> must be specified");
+                Logger.LogInformation("<level> must be specified");
                 return;
             }
 
             string skill_name = args[0];
             int value = -1;
             bool validLevel = int.TryParse(args[1], out value);
-            if (!validLevel)
+            if (!validLevel && value >= 0)
             {
-                Logger.LogInformation("<number> must be a number");
+                Logger.LogInformation("<level> must be a valid number, >= 0");
                 return;
             }
 
@@ -40,14 +40,14 @@ namespace LevelExtender.Commands
             }
             else
             {
-                Logger.LogInformation($"SetLevelCommand: Can't find skill {skill_name}");
+                Logger.LogInformation($"SetLevelCommand: Can't find skill {args[0]}");
             }
         }
 
         /// <summary>Get the command's help description.</summary>
         private static string GetDescription()
         {
-            return "Sets the player's level: lev <skill name> <number>.";
+            return "Sets the player's level: set_level <skill name> <level>.";
         }
     }
 }

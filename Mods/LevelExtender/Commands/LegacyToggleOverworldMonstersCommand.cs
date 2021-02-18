@@ -15,11 +15,11 @@ namespace LevelExtender.Commands
             var config = Mod.EditConfig(conf => conf.OverworldMonsters = !conf.OverworldMonsters);
             if (config.OverworldMonsters)
             {
-                ModEntry.LogMonitor.Log($"Overworld Monster Spawning -> ON.");
+                Logger.LogInformation($"Overworld Monster Spawning -> ON.");
             }
             else
             {
-                ModEntry.LogMonitor.Log($"Overworld Monster Spawning -> OFF.");
+                Logger.LogInformation($"Overworld Monster Spawning -> OFF.");
             }
         }
 

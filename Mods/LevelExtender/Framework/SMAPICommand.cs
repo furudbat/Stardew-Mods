@@ -26,13 +26,15 @@ namespace LevelExtender.Framework
         /// </summary>
         protected IMod Mod { get; private set; }
 
+        protected Logger Logger { get; private set; }
+
         /*********
         ** Public methods
         *********/
         /// <summary>Register all loaded command types.</summary>
         /// <param name="helper">The SMAPI command helper.</param>
         /// <param name="testCommands">Whether to only register testing commands.</param>
-        public static void RegisterCommands(IMod mod, ICommandHelper helper, bool testCommands)
+        public static void RegisterCommands(IMod mod, ModConfig config, IMonitor logMonitor, ICommandHelper helper, bool testCommands)
         {
             var commandTypes = typeof(SMAPICommand<IMod>)
                 .Assembly
@@ -43,6 +45,7 @@ namespace LevelExtender.Framework
             {
                 SMAPICommand<IMod> command = (SMAPICommand<IMod>)Activator.CreateInstance(commandType);
                 command.Mod = mod;
+                command.Logger = new Logger(config, logMonitor);
                 if (!(testCommands ^ command.TestingCommand))
                     command.RegisterCommand(helper);
             }
@@ -66,7 +69,7 @@ namespace LevelExtender.Framework
         /// <summary>Registers a command with the SMAPI console.</summary>
         private void RegisterCommand(ICommandHelper helper)
         {
-            Logger.LogInformation($"Registering {this.Name} command...");
+            //Logger.LogInformation($"Registering {this.Name} command...");
             helper.Add(this.Name, this.Description, (name, args) => this.Apply(args));
             Logger.LogInformation($"{this.Name} command registered.");
         }

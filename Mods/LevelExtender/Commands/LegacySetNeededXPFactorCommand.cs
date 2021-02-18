@@ -13,13 +13,13 @@ namespace LevelExtender.Commands
         {
             if (args.Length < 1)
             {
-                ModEntry.LogMonitor.Log("<skill name> must be specified");
+                Logger.LogInformation("<skill name> must be specified");
                 return;
             }
 
             if (args.Length < 2)
             {
-                ModEntry.LogMonitor.Log("<number> must be specified");
+                Logger.LogInformation("<number> must be specified");
                 return;
             }
 
@@ -28,17 +28,19 @@ namespace LevelExtender.Commands
             bool validValue = double.TryParse(args[1], out value);
             if (!validValue)
             {
-                ModEntry.LogMonitor.Log("<value> must be a decimal");
+                Logger.LogInformation("<value> must be a decimal");
                 return;
             }
 
             var succ = Mod.SetNeededXPFactor(skill_name, value);
             if (succ)
             {
-                ModEntry.LogMonitor.Log($"SetNeededXPFactorCommand: Set skill needed xp factor for {args[0]} to {args[1]}");
+                Logger.LogInformation($"SetNeededXPFactorCommand: Set skill needed xp factor for {args[0]} to {args[1]}");
             }
-
-            ModEntry.LogMonitor.Log($"SetNeededXPFactorCommand: Can't find skill {args[0]}");
+            else
+            {
+                Logger.LogInformation($"SetNeededXPFactorCommand: Can't find skill {skill_name}");
+            }
         }
 
         /// <summary>Get the command's help description.</summary>

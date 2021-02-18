@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Harmony;
 using LevelExtender.Framework;
-using LevelExtender.Framework.Mods;
-using LevelExtender.Framework.Professions;
+using LevelExtender.LEAPI;
 using LevelExtender.Logging;
 using LevelExtender.Patches;
 using StardewModdingAPI;
@@ -19,19 +18,13 @@ namespace LevelExtender
     {
         private bool SaveIsLoaded { get; set; } = false;
 
-        public static string ModPath { get; private set; }
-
-        public static ModConfig Config { get; private set; }
-
-        public static IMonitor LogMonitor { get; private set; }
-
-        public static IModRegistry ModRegistry { get; private set; }
+        public ModConfig Config { get; private set; }
+        public static Logger Logger { get; private set; }
         public override void Entry(IModHelper helper)
         {
-            // init
-            LogMonitor = this.Monitor;
-            ModPath = helper.DirectoryPath;
-            ModRegistry = helper.ModRegistry;
+            Config = helper.ReadConfig<ModConfig>();
+            Logger = new Logger(Config, this.Monitor);
+            levelExtender = new LevelExtender(Config, this.Helper, this.Monitor);
 
             var harmony = HarmonyInstance.Create(this.ModManifest.UniqueID);
             Type[] types1 = { typeof(Microsoft.Xna.Framework.Rectangle), typeof(int), typeof(int), typeof(bool), typeof(float), typeof(int), typeof(float), typeof(float), typeof(bool), typeof(Farmer) };
@@ -39,7 +32,7 @@ namespace LevelExtender
             Type[] types3 = { typeof(Item), typeof(bool) };
 
             harmony.Patch(
-                    original: AccessTools.Method(typeof(GameLocation), nameof(GameLocation.damageMonster), types1), 
+                    original: AccessTools.Method(typeof(GameLocation), nameof(GameLocation.damageMonster), types1),
                     prefix: new HarmonyMethod(typeof(GameLocationPatch), nameof(GameLocationPatch.damageMonster_Prefix))
                 );
             harmony.Patch(
@@ -52,6 +45,11 @@ namespace LevelExtender
             this.Helper.Content.InvalidateCache("Data/Fish");
         }
 
+        public override object GetApi()
+        {
+            return levelExtender;
+        }
+
         private void RegisterGameEvents(IModEvents events)
         {
             events.GameLoop.GameLaunched += this.onLaunched;
@@ -61,29 +59,34 @@ namespace LevelExtender
             events.GameLoop.Saving += this.onSaving;
             events.GameLoop.ReturnedToTitle += this.onReturnedToTitle;
             events.GameLoop.DayStarted += this.onDayStarted;
-            events.Display.Rendered += this.onDisplayRendered;
         }
 
 
         private void onLaunched(object sender, GameLaunchedEventArgs e)
         {
-            Config = Helper.ReadConfig<ModConfig>(); // This can also be done in your entry method if you want, but the rest needs to come in the GameLaunched event.
+            Config = Helper.ReadConfig<ModConfig>();
+            levelExtender.Config = Config;
+            Logger.Reset(Config, this.Monitor);
             var configMenuApi = Helper.ModRegistry.GetApi<GenericModConfigMenuAPI>("spacechase0.GenericModConfigMenu");
-            configMenuApi.RegisterModConfig(ModManifest, () => Config = new ModConfig(), () => Helper.WriteConfig(Config));
+            if (configMenuApi != null)
+            {
+                configMenuApi.RegisterModConfig(ModManifest, () => Config = new ModConfig(), () => Helper.WriteConfig(Config));
 
-            configMenuApi.RegisterLabel(ModManifest, "Notifications", "Notifications and Display XP Bars");
-            configMenuApi.RegisterSimpleOption(ModManifest, "Show EXP Bars", "", () => Config.drawBars, (bool val) => Config.drawBars = val);
-            configMenuApi.RegisterSimpleOption(ModManifest, "Show Extra Item Notifications", "", () => Config.drawExtraItemNotifications, (bool val) => Config.drawExtraItemNotifications = val);
-            configMenuApi.RegisterSimpleOption(ModManifest, "Min. Item Price For Notifications", "", () => Config.minItemPriceForNotifications, (int val) => Config.minItemPriceForNotifications = val);
+                configMenuApi.RegisterLabel(ModManifest, "Notifications", "Notifications and Display XP Bars");
+                configMenuApi.RegisterSimpleOption(ModManifest, "Show XP Bars", "Enable XP Bar", () => Config.DrawXPBars, (bool val) => Config.DrawXPBars = val);
+                configMenuApi.RegisterSimpleOption(ModManifest, "Show XP Gain", "Show Gained XP", () => Config.DrawXPGain, (bool val) => Config.DrawXPGain = val);
+                configMenuApi.RegisterSimpleOption(ModManifest, "Extra Item Noti. Message", "", () => Config.DrawExtraItemNotifications, (bool val) => Config.DrawExtraItemNotifications = val);
+                configMenuApi.RegisterSimpleOption(ModManifest, "Noti. in HUB", "Show Notification in HUB, otherwise in Chat", () => Config.DrawNotificationsAsHUDMessage, (bool val) => Config.DrawNotificationsAsHUDMessage = val);
+                configMenuApi.RegisterSimpleOption(ModManifest, "Min. Item Price For Noti.", "Show Extra Item Notifications with minimum Item Price", () => Config.MinItemPriceForNotifications, (int val) => Config.MinItemPriceForNotifications = val);
+                configMenuApi.RegisterSimpleOption(ModManifest, "Extra Item Noti. with Amount", "Show Extra Item Notification with Extra Item Amount, otherwise shows only a simple message", () => Config.ExtraItemNotificationAmountMessage, (bool val) => Config.ExtraItemNotificationAmountMessage = val);
 
-            configMenuApi.RegisterLabel(ModManifest, "Features", "Game changing features");
-            configMenuApi.RegisterSimpleOption(ModManifest, "Enable Overworld Monsters", "Monsters spawn random on the Overworld", () => Config.OverworldMonsters, (bool val) => Config.OverworldMonsters = val);
-            configMenuApi.RegisterSimpleOption(ModManifest, "Enable Crop Grow", "Crops can grow fully or faster by day (randomly, depending on your Farming-Level)", () => Config.CropsGrow, (bool val) => Config.CropsGrow = val);
-            configMenuApi.RegisterSimpleOption(ModManifest, "Enable More XP from Monster", "Killing Monsters with one-hit gives more XP", () => Config.MoreEXPByOneHitKills, (bool val) => Config.MoreEXPByOneHitKills = val);
-            configMenuApi.RegisterSimpleOption(ModManifest, "Enable Drop Extra Items", "Drops More Items/Harvest (randomly, depending on your Skill-Levels)", () => Config.DropExtraItems, (bool val) => Config.DropExtraItems = val);
-
-            ModHandler.Initialise();
-            levelExtender = new LevelExtender(Config, this.Helper);
+                configMenuApi.RegisterLabel(ModManifest, "Features", "Game changing features");
+                configMenuApi.RegisterSimpleOption(ModManifest, "Enable Overworld Monsters", "Monsters spawn random on the Overworld", () => Config.OverworldMonsters, (bool val) => Config.OverworldMonsters = val);
+                configMenuApi.RegisterSimpleOption(ModManifest, "Enable Crop Grow", "Crops can grow fully or faster by day (randomly, depending on your Farming-Level)", () => Config.CropsGrow, (bool val) => Config.CropsGrow = val);
+                configMenuApi.RegisterSimpleOption(ModManifest, "Enable More XP from Monster", "Killing Monsters with one-hit gives more XP", () => Config.MoreEXPByOneHitKills, (bool val) => Config.MoreEXPByOneHitKills = val);
+                configMenuApi.RegisterSimpleOption(ModManifest, "Enable Drop Extra Items", "Drops More Items/Harvest (randomly, depending on your Skill-Levels)", () => Config.DropExtraItems, (bool val) => Config.DropExtraItems = val);
+            }
+            LEModHandler.Initialise(this.Monitor);
             GameLocationPatch.Initialize(levelExtender);
             FarmerPatch.Initialize(levelExtender);
 
@@ -125,7 +128,6 @@ namespace LevelExtender
             {
                 levelExtender.UpdateSkillXP();
             }
-
             if (Config.OverworldMonsters && e.IsMultipleOf(3600))
             {
                 levelExtender.CleanUpMonters();
@@ -150,13 +152,8 @@ namespace LevelExtender
 
         private void onSaveLoaded(object sender, SaveLoadedEventArgs e)
         {
-
-            Profession.AddMissingProfessions();
-
             levelExtender.InitMod();
-
             Helper.Content.InvalidateCache("Data/Fish");
-
             SaveIsLoaded = true;
         }
 
@@ -164,14 +161,11 @@ namespace LevelExtender
         {
             levelExtender.RemoveMonsters();
         }
-
         private void onReturnedToTitle(object sender, EventArgs e)
         {
             levelExtender.CleanUpMod();
             SaveIsLoaded = false;
         }
-
-
         private void onDayStarted(object sender, EventArgs e)
         {
             if (LocalMultiplayer.IsLocalMultiplayer())
@@ -180,35 +174,25 @@ namespace LevelExtender
                 System.Environment.Exit(1);
             }
 
-            if (Config.CropsGrow) {
+            if (Config.CropsGrow)
+            {
                 levelExtender.RandomCropGrows();
             }
 
             levelExtender.CleanUpLastMessage();
         }
 
-        private void onDisplayRendered(object sender, RenderedEventArgs e)
-        {
-            if (!Context.IsWorldReady)
-                return;
-
-            if (Config.drawBars)
-            {
-                levelExtender.DrawXPBars();
-            }
-        }
-
         private void RegisterTestingCommands()
         {
             Logger.LogInformation("Registering Testing commands...");
-            SMAPICommand<ILevelExtender>.RegisterCommands(levelExtender, this.Helper.ConsoleCommands, true);
+            SMAPICommand<ILevelExtender>.RegisterCommands(levelExtender, this.Config, this.Monitor, this.Helper.ConsoleCommands, true);
             Logger.LogInformation("Testing commands registered.");
         }
 
         private void RegisterCommands()
         {
             Logger.LogInformation("Registering commands...");
-            SMAPICommand<ILevelExtender>.RegisterCommands(levelExtender, this.Helper.ConsoleCommands, false);
+            SMAPICommand<ILevelExtender>.RegisterCommands(levelExtender, this.Config, this.Monitor, this.Helper.ConsoleCommands, false);
             Logger.LogInformation("Commands registered.");
         }
 

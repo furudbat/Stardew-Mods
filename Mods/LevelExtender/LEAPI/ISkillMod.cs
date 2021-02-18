@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
-using LevelExtender.Framework;
 
-namespace LevelExtender.Framework.Mods
+namespace LevelExtender.LEAPI
 {
     // from SkillPrestige by Alphablackwolf - https://github.com/Alphablackwolf/SkillPrestige
     /// <summary>
@@ -18,7 +17,6 @@ namespace LevelExtender.Framework.Mods
         /// Skills to add to the system.
         /// </summary>
         IEnumerable<Skill> AdditionalSkills { get; }
-
         bool IsFound { get; }
     }
 }

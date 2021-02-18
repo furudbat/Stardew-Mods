@@ -37,7 +37,7 @@ namespace LevelExtender.Patches
             }
             catch (Exception ex)
             {
-                Logger.LogError($"Failed in {nameof(damageMonster_Prefix)}:\n{ex}");
+                mod.Logger.LogError($"Failed in {nameof(damageMonster_Prefix)}:\n{ex}");
                 return true; // run original logic
             }
         }

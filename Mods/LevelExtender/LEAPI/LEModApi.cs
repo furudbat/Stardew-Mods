@@ -1,19 +1,24 @@
 ﻿using System;
-using LevelExtender.Common;
-using LevelExtender.Framework.Mods;
+using System.Collections.Generic;
+using StardewModdingAPI;
 
-namespace LevelExtender
+namespace LevelExtender.LEAPI
 {
     public interface LEModApi
     {
         void Spawn_Rate(double osr);
-        int[] CurrentXP();
-        int[] RequiredXP();
+        int[] currentXP();
+        int[] requiredXP();
 
-        event EventHandler<EXPEventArgs> OnXPChanged;
+        event EventHandler<LEXPEventArgs> OnXPChanged;
+        IEnumerable<ILESkill> GetSkills();
+        int GetSkillCurrentXP(string skillName);
+        int GetSkillRequiredXP(string skillName);
+        int GetSkillLevel(string skillName);
+        int GetXPRequiredToLevel(string skillName, int level);
 
         //*** SKILL COMPATIBILITY ***//
-        void RegisterMod(ISkillMod mod);
+        void RegisterMod(ISkillMod mod, IMonitor logMonitor);
 
 
         //*** LEGECY SKILL COMPATIBILITY ***//

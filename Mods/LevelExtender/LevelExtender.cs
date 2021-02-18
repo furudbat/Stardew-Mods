@@ -4,9 +4,10 @@ using System.Linq;
 using System.Timers;
 using LevelExtender.Common;
 using LevelExtender.Framework;
-using LevelExtender.Framework.Mods;
 using LevelExtender.Framework.SkillTypes;
+using LevelExtender.LEAPI;
 using LevelExtender.Logging;
+using LevelExtender.UIElements;
 using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewValley;
@@ -17,11 +18,13 @@ using StardewValley.Tools;
 
 namespace LevelExtender
 {
-    class LevelExtender : ILevelExtender, LEModApi
+    internal class LevelExtender : ILevelExtender, LEModApi
     {
-        public List<LESkill> Skills { get; private set; } = new List<LESkill>();
-        public double MonstersSpawnRate { get; set; } = -1;
-        public List<Monster> Monsters { get; private set; } = new List<Monster>();
+        public ModConfig Config { get; set; }
+        public Logger Logger { get; private set; }
+        public List<LESkill> Skills { get; private set; }
+        public double MonstersSpawnRate { get; set; }
+        public List<Monster> Monsters { get; private set; }
         public bool NoMonsters
         {
             get { return Monsters.Count == 0; }
@@ -30,12 +33,26 @@ namespace LevelExtender
         private static readonly int MAX_DOUBLE_ITEM_DROPS = 100;
         private static readonly List<int> REQUIRED_XP_TABLE = new List<int> { 100, 380, 770, 1300, 2150, 3300, 4800, 6900, 10000, 15000 };
 
-        public void RegisterMod(ISkillMod mod)
+        public LevelExtender(ModConfig config, IModHelper helper, IMonitor logMonitor)
         {
-            ModHandler.RegisterMod(mod);
+            this.Config = config;
+            this.helper = helper;
+            Logger = new Logger(config, logMonitor);
+            Skills = new List<LESkill>();
+            Monsters = new List<Monster>();
+            MonstersSpawnRate = -1;
+
+            XPBar = new ExtendedExperienceBar(this.helper, this);
+            XPBar.ToggleShowExperienceBar(config.DrawXPBars);
+            XPBar.ToggleShowExperienceGain(config.DrawXPGain);
         }
 
-        public event EventHandler<EXPEventArgs> OnXPChanged
+        public void RegisterMod(ISkillMod mod, IMonitor logMonitor)
+        {
+            LEModHandler.RegisterMod(mod, logMonitor);
+        }
+
+        public event EventHandler<LEXPEventArgs> OnXPChanged
         {
             add => LEEvents.OnXPChanged += value;
             remove => LEEvents.OnXPChanged -= value;
@@ -46,16 +63,17 @@ namespace LevelExtender
             MonstersSpawnRate = osr;
         }
 
-        public int[] CurrentXP()
+        public int[] currentXP()
         {
             var ret = new List<int>();
-            foreach (var skill in Skills) {
+            foreach (var skill in Skills)
+            {
                 ret.Add(skill.XP);
             }
             return ret.ToArray();
         }
 
-        public int[] RequiredXP()
+        public int[] requiredXP()
         {
             var ret = new List<int>();
             foreach (var skill in Skills)
@@ -64,11 +82,47 @@ namespace LevelExtender
             }
             return ret.ToArray();
         }
+        public IEnumerable<ILESkill> GetSkills()
+        {
+            return Skills.Cast<ILESkill>();
+        }
+        public int GetSkillCurrentXP(string skillName)
+        {
+            var skill = Skills.FirstOrDefault(s => s.Name == skillName);
+            return (skill != null) ? skill.XP : -1;
+        }
+        public int GetSkillRequiredXP(string skillName)
+        {
+            var skill = Skills.FirstOrDefault(s => s.Name == skillName);
+            return (skill != null) ? skill.RequiredXPNextLevel : -1;
+        }
+        public int GetSkillLevel(string skillName)
+        {
+            var skill = Skills.FirstOrDefault(s => s.Name == skillName);
+            return (skill != null) ? skill.Level : -1;
+        }
+        public int GetXPRequiredToLevel(string skillName, int level)
+        {
+            var skill = Skills.FirstOrDefault(s => s.Name == skillName);
+            return (skill != null && level < skill.XPTable.Count) ? skill.XPTable[level] : -1;
+        }
+
         public bool SetLevel(string name, int value)
         {
             var skill = Skills.FirstOrDefault(s => s.Name == name);
-            if (skill != null) {
+            if (skill != null)
+            {
                 skill.Level = value;
+                return true;
+            }
+            return false;
+        }
+        public bool SetXP(string name, int value)
+        {
+            var skill = Skills.FirstOrDefault(s => s.Name == name);
+            if (skill != null)
+            {
+                skill.XP = value;
                 return true;
             }
             return false;
@@ -86,74 +140,53 @@ namespace LevelExtender
 
         public ModConfig EditConfig(Action<ModConfig> func)
         {
-            func(config);
-            this.helper.WriteConfig(config);
-            return config;
+            func(Config);
+            XPBar.ToggleShowExperienceBar(Config.DrawXPBars);
+            XPBar.ToggleShowExperienceGain(Config.DrawXPGain);
+            this.helper.WriteConfig(Config);
+            return Config;
         }
 
-        public LevelExtender(ModConfig config, IModHelper helper) {
-            this.config = config;
-            this.helper = helper;
-            LEEvents.OnXPChanged += this.OnXPChangedEvent;
-        }
         public void InitMod()
         {
-            SetTimerShouldDrawXPBar(2000);
             InitSkills();
         }
         private void InitSkills()
         {
-            /// TODO: use constants for item categories ?
-            itemCategories[SkillType.Farming] = new List<int> { -16, -74, -75, -79, -80, -81 };
-            itemCategories[SkillType.Fishing] = new List<int> { -4 };
-            itemCategories[SkillType.Foraging] = itemCategories[SkillType.Farming];
-            itemCategories[SkillType.Mining] = new List<int> { -2, -12, -15 };
-            itemCategories[SkillType.Combat] = new List<int> { -28, -29, -95, -96, -98 };
-            /// TODO: add item categories for custom skills, move itemCategories to Skill interface (?)
-
-            Skills.Clear();
-            foreach (var skill in Skill.AllSkills)
+            foreach (var skill in SkillsList.AllSkills)
             {
-                LESkill leSkill = new LESkill(skill, LEEvents, skill.GetSkillExperience(), 1.0, new List<int>(REQUIRED_XP_TABLE), itemCategories[skill.Type]);
+                LESkill leSkill = new LESkill(skill, LEEvents, 1.0, new List<int>(REQUIRED_XP_TABLE));
                 Skills.Add(leSkill);
             }
 
-            Logger.LogVerbose("init: skills {skills}");
-        }
-
-        public void EndXPBar(SkillType skillType)
-        {
-            Logger.LogDebug($"EndXPBar: {skillType.Name}");
-            XPBars = XPBars.Where(xpb => xpb.Skill.Skill.Type != skillType).ToList();
-
-            if (XPBars.Count > 0)
-            {
-                XPBars[0].resetY();
-            }
+            ModEntry.Logger.LogVerbose($"InitSkills: skills {Skills.Count}");
         }
 
         public void CleanUpMonters()
         {
             Monsters = Monsters.Where(monster => monster != null && monster.Health > 0 && monster.currentLocation != null).ToList();
         }
-
-        public void CleanUpMod() {
+        public void CleanUpMod()
+        {
             firstFade = false;
             lastMessage = "";
             lastDrawXPBarsTime = DateTime.Now;
 
             Monsters.Clear();
-            XPBars.Clear();
+            XPBar.Dispose();
 
-            InitSkills();
+            Skills.Clear();
         }
 
-        public void CleanUpLastMessage() {
+        public void CleanUpLastMessage()
+        {
             lastMessage = "";
         }
 
-        public void UpdateSkillXP() {
-            foreach (var skill in Skill.DefaultSkills) {
+        public void UpdateSkillXP()
+        {
+            foreach (var skill in SkillsList.DefaultSkills)
+            {
                 var leSkill = Skills.FirstOrDefault(s => s.Skill.Type == skill.Type);
 
                 if (leSkill == null)
@@ -171,10 +204,11 @@ namespace LevelExtender
             }
         }
 
-        public void SpawnRandomMonster() {
-            var maxMonterSpawnTries = Math.Floor((float) Game1.player.currentLocation.Map.DisplayWidth / Game1.tileSize) * Math.Floor((float) Game1.player.currentLocation.Map.DisplayHeight / Game1.tileSize) + 1;
+        public void SpawnRandomMonster()
+        {
+            var maxMonterSpawnTries = Math.Floor((float)Game1.player.currentLocation.Map.DisplayWidth / Game1.tileSize) * Math.Floor((float)Game1.player.currentLocation.Map.DisplayHeight / Game1.tileSize) + 1;
             Vector2 location = Game1.player.currentLocation.getRandomTile();
-            for (int i = 0; i < maxMonterSpawnTries && !Game1.player.currentLocation.isTileLocationTotallyClearAndPlaceable(location);i++)
+            for (int i = 0; i < maxMonterSpawnTries && !Game1.player.currentLocation.isTileLocationTotallyClearAndPlaceable(location); i++)
             {
                 location = Game1.player.currentLocation.getRandomTile();
             }
@@ -185,7 +219,8 @@ namespace LevelExtender
             var characters = Game1.currentLocation.characters;
             characters.Add(monster);
 
-            if (tier == 5) {
+            if (tier == 5)
+            {
                 Game1.chatBox.addMessage($"A boss has spawned in your current location!", Color.DarkRed);
             }
 
@@ -202,9 +237,9 @@ namespace LevelExtender
                     return 0.0;
                 }
 
-                if (config.OverworldMonstersSpawnRate > 0.0)
+                if (Config.OverworldMonstersSpawnRate > 0.0)
                 {
-                    return config.OverworldMonstersSpawnRate;
+                    return Config.OverworldMonstersSpawnRate;
                 }
                 else if (MonstersSpawnRate > 0.0)
                 {
@@ -220,7 +255,8 @@ namespace LevelExtender
             }
         }
 
-        public void UpdateBobberBar() {
+        public void UpdateBobberBar()
+        {
             if (Game1.activeClickableMenu is BobberBar && !firstFade)
             {
                 int bobberBonus = 0;
@@ -283,14 +319,6 @@ namespace LevelExtender
             }
         }
 
-        public void SetTimerShouldDrawXPBar(int time)
-        {
-            shouldDrawXPBar = new Timer(time);
-            shouldDrawXPBar.Elapsed += (sender, e) => shouldDrawXPBar.Enabled = false;
-            shouldDrawXPBar.AutoReset = false;
-            shouldDrawXPBar.Enabled = true;
-        }
-
         public bool damageMonster_Prefix(
           Rectangle areaOfEffect,
           int minDamage,
@@ -305,7 +333,8 @@ namespace LevelExtender
         {
             var ret = true;
 
-            if (config.MoreEXPByOneHitKills) {
+            if (Config.MoreEXPByOneHitKills)
+            {
                 ret = OneHitKillsMoreXP(areaOfEffect, minDamage, maxDamage, isBomb, knockBackModifier, addedPrecision, critChance, critMultiplier, triggerMonsterInvincibleTimer, who) && ret;
             }
 
@@ -324,7 +353,8 @@ namespace LevelExtender
           float critChance,
           float critMultiplier,
           bool triggerMonsterInvincibleTimer,
-          Farmer who) {
+          Farmer who)
+        {
             GameLocation currentLocation = Game1.currentLocation;
 
             /// monster can spawn on farm
@@ -407,7 +437,7 @@ namespace LevelExtender
         {
             var ret = true;
 
-            if (config.DropExtraItems)
+            if (Config.DropExtraItems)
             {
                 ret = DropExtraItems(item) && ret;
             }
@@ -433,21 +463,22 @@ namespace LevelExtender
                 if (message.Length > 0)
                     break;
 
-                if (cat_entry.Value.Contains(item_category) && ShouldDoubleItem(cat_entry.Key))
+                var skillType = cat_entry.Key;
+                if (cat_entry.Value.Contains(item_category) && ShouldDoubleItem(skillType))
                 {
                     item.Stack += 1;
 
-                    for (int i = 0; i < MAX_DOUBLE_ITEM_DROPS && ShouldDoubleItem(cat_entry.Key); i++)
+                    for (int i = 0; i < MAX_DOUBLE_ITEM_DROPS && ShouldDoubleItem(skillType); i++)
                     {
                         item.Stack += 1;
                     }
 
-                    if (config.drawExtraItemNotifications)
+                    if (Config.DrawExtraItemNotifications)
                     {
-                        if (config.DropExtraItemMessageExtras)
-                            message = $"Your {cat_entry.Key.Name} level allowed you to obtain {item.Stack - original_item_stack} extra {item.DisplayName}!";
+                        if (Config.ExtraItemNotificationAmountMessage)
+                            message = helper.Translation.Get(LanguageKeys.ExtraItemMessageWithAmount, new { skillName = skillType.Name, extraItemAmount = item.Stack - original_item_stack, itemName = item.DisplayName });
                         else
-                            message = $"Your {cat_entry.Key.Name} level allowed you to obtain extra {item.DisplayName}(s)!";
+                            message = helper.Translation.Get(LanguageKeys.ExtraItemMessage, new { skillName = skillType.Name, itemName = item.DisplayName });
                     }
                 }
 
@@ -457,12 +488,12 @@ namespace LevelExtender
                 }
             }
 
-            if (message.Length > 0 && item.salePrice() >= config.minItemPriceForNotifications && message != lastMessage)
+            if (message.Length > 0 && item.salePrice() >= Config.MinItemPriceForNotifications && message != lastMessage)
             {
                 const float HUB_MESSAGE_TIME_LEFT = 3000;
                 var messageColor = Color.DeepSkyBlue;
 
-                if (config.DrawNotificationsAsHUDMessage)
+                if (Config.DrawNotificationsAsHUDMessage)
                     Game1.addHUDMessage(new HUDMessage(message, messageColor, HUB_MESSAGE_TIME_LEFT, true));
                 else
                     Game1.chatBox.addMessage(message, messageColor);
@@ -474,7 +505,7 @@ namespace LevelExtender
             return true;
         }
 
-        public void RemoveMonsters() 
+        public void RemoveMonsters()
         {
             foreach (GameLocation location in Game1.locations)
             {
@@ -492,7 +523,7 @@ namespace LevelExtender
 
             foreach (var key in farm.terrainFeatures.Keys)
             {
-                var terrainFeatureHoeDirt = (farm.terrainFeatures[key] is HoeDirt) ? (HoeDirt) farm.terrainFeatures[key] : null;
+                var terrainFeatureHoeDirt = (farm.terrainFeatures[key] is HoeDirt) ? (HoeDirt)farm.terrainFeatures[key] : null;
                 if (terrainFeatureHoeDirt != null && terrainFeatureHoeDirt.crop != null && rand.NextDouble() < growCompletelyChance)
                 {
                     terrainFeatureHoeDirt.crop.growCompletely();
@@ -508,75 +539,11 @@ namespace LevelExtender
             }
         }
 
-        public void DrawXPBars() {
-            if (lastDrawXPBarsTime == null)
-                lastDrawXPBarsTime = DateTime.Now;
-
-            for (int i = 0; i < XPBars.Count; i++)
-            {
-                try
-                {
-                    if (i >= XPBars.Count || XPBars[i] == null)
-                        continue;
-
-                    int? top_ych = null;
-                    if (i > 0 && XPBars.Count > 0)
-                        top_ych = (int) XPBars[0].FadeY;
-
-                    XPBars[i].DrawXPBar(lastDrawXPBarsTime, top_ych, i);
-                    //Logger.LogDebug($"DrawXPBar {i} {XPBars[i].Skill.Skill.Type.Name}");
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError($"Non-Serious draw violation: DrawXPBar {i}/{XPBars.Count}  {ex.Message}");
-                }
-            }
-
-            lastDrawXPBarsTime = DateTime.Now;
-        }
-
         private bool ShouldDoubleItem(SkillType skillType)
         {
-            double drate = (skillType == SkillType.Farming || skillType == SkillType.Foraging) ? 0.002 / 2.0 : 0.002;
+            double drate = (skillType == DefaultSkillTypes.Farming || skillType == DefaultSkillTypes.Foraging) ? 0.002 / 2.0 : 0.002;
             var skill = Skills.FirstOrDefault(s => s.Skill.Type == skillType);
             return skill != null && rand.NextDouble() <= (skill.Level * drate);
-        }
-        private void OnXPChangedEvent(object sender, EXPEventArgs e)
-        {
-            var bar = XPBars.FirstOrDefault(b => b.Skill.Skill.Type == e.SkillType);
-            var skill = Skills.FirstOrDefault(s => s.Skill.Type == e.SkillType);
-
-            Logger.LogDebug($"OnXPChangedEvent: {skill.XP}/{skill.RequiredXPNextLevel}");
-
-            if (skill == null || skill.ChangedXP < 0 || skill.ChangedXP > 100001 || shouldDrawXPBar.Enabled)
-                return;
-
-            if (bar != null)
-            {
-                bar.FadeTimer.Stop();
-                bar.FadeTimer.Start();
-                bar.FadeTime = DateTime.Now;
-                double val = -bar.FadeY;
-
-                SetBarsYchVals(val);
-                SortByTime();
-            }
-            else
-            {
-                XPBars.Add(new XPBar(this, skill));
-                Logger.LogDebug($"OnXPChangedEvent: add XPBars {skill.Skill.Type.Name}");
-            }
-        }
-        private void SortByTime()
-        {
-            XPBars = XPBars.OrderBy(o => o.FadeTime).ToList();
-        }
-        private void SetBarsYchVals(double val)
-        {
-            foreach (var bar in XPBars)
-            {
-                bar.FadeY = val;
-            }
         }
 
         private static Monster GenerateMonster(int tier, Monster monster)
@@ -660,11 +627,9 @@ namespace LevelExtender
 
         private static Random rand = new Random(Guid.NewGuid().GetHashCode());
 
-        private readonly ModConfig config;
         private IModHelper helper;
         private LEEvents LEEvents = new LEEvents();
-        private List<XPBar> XPBars = new List<XPBar>();
-        private Timer shouldDrawXPBar;
+        private ExtendedExperienceBar XPBar;
         private Timer cooldownLastMessage;
         private DateTime lastDrawXPBarsTime;
         private bool firstFade = false;

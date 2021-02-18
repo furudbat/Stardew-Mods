@@ -16,7 +16,7 @@ namespace LevelExtender.Commands
 
             foreach (var skill in Mod.Skills)
             {
-                Logger.LogDisplay($"{skill.Name} | {skill.Level} | {skill.XP} | {skill.RequiredXPNextLevel}");
+                Logger.LogInformation($"{skill.Name} | {skill.Level} | {skill.XP} | {skill.RequiredXPNextLevel}");
             }
         }
 

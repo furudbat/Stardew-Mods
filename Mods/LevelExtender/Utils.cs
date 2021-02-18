@@ -10,7 +10,7 @@ using Microsoft.Xna.Framework.Graphics;
 namespace LevelExtender
 {
     // from SkillPrestige by Alphablackwolf - https://github.com/Alphablackwolf/SkillPrestige
-    public static class Utils
+    internal static class Utils
     {
         /// <summary>gets the field from an object through reflection, even if it is a private field.</summary>
         /// <typeparam name="T">The type that contains the parameter member</typeparam>
@@ -57,7 +57,7 @@ namespace LevelExtender
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex.ToString());
+                ModEntry.Logger.LogError(ex.ToString());
                 return default;
             }
         }
@@ -87,12 +87,12 @@ namespace LevelExtender
         {
             try
             {
-                Logger.LogVerbose($"Attempting to obtain types of assembly {assembly.FullName} safely...");
+                ModEntry.Logger.LogVerbose($"Attempting to obtain types of assembly {assembly.FullName} safely...");
                 return assembly.GetTypes();
             }
             catch (ReflectionTypeLoadException exception)
             {
-                Logger.LogInformation($"Failed to load a type from assembly {assembly.FullName}. details: {Environment.NewLine} {exception}");
+                ModEntry.Logger.LogInformation($"Failed to load a type from assembly {assembly.FullName}. details: {Environment.NewLine} {exception}");
                 return exception.Types.Where(x => x != null);
             }
         }
