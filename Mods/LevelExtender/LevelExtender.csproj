@@ -68,12 +68,16 @@
     <Compile Include="Commands\LegacyShowXPTableCommand.cs" />
     <Compile Include="Common\LESkill.cs" />
     <Compile Include="Framework\SkillsList.cs" />
+    <Compile Include="I18n.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>I18n.tt</DependentUpon>
+    </Compile>
     <Compile Include="LEAPI\LEEvents.cs" />
     <Compile Include="Framework\SMAPICommand.cs" />
     <Compile Include="GenericModConfigMenuAPI.cs" />
-    <Compile Include="ILevelExtender.cs" />
+    <Compile Include="Common\ILevelExtender.cs" />
     <Compile Include="LEAPI\ILESkill.cs" />
-    <Compile Include="LanguageKeys.cs" />
     <Compile Include="LEAPI\LEModApi.cs" />
     <Compile Include="LevelExtender.cs" />
     <Compile Include="Logging\Logger.cs" />
@@ -88,9 +92,10 @@
     <Compile Include="LEAPI\Skill.cs" />
     <Compile Include="Framework\SkillTypes\DefaultSkillTypes.cs" />
     <Compile Include="LEAPI\SkillType.cs" />
+    <Compile Include="SpaceCoreAPI.cs" />
     <Compile Include="UIElements\ExperiencePointDisplay.cs" />
     <Compile Include="UIElements\ExtendedExperienceBar.cs" />
-    <Compile Include="Utils.cs" />
+    <Compile Include="Extensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="i18n\de.json" />
@@ -111,11 +116,22 @@
     <PackageReference Include="Pathoschild.Stardew.ModBuildConfig">
       <Version>3.2.2</Version>
     </PackageReference>
+    <PackageReference Include="Pathoschild.Stardew.ModTranslationClassBuilder">
+      <Version>1.0.0</Version>
+    </PackageReference>
     <PackageReference Include="System.Runtime.Serialization.Json">
       <Version>4.3.0</Version>
     </PackageReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="I18n.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>I18n.cs</LastGenOutput>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Pathoschild.Stardew.ModBuildConfig.3.1.0\build\Pathoschild.Stardew.ModBuildConfig.targets" Condition="Exists('..\packages\Pathoschild.Stardew.ModBuildConfig.3.1.0\build\Pathoschild.Stardew.ModBuildConfig.targets')" />
 </Project>

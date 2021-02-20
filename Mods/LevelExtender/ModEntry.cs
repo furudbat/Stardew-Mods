@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Harmony;
+using LevelExtender.Common;
 using LevelExtender.Framework;
 using LevelExtender.LEAPI;
 using LevelExtender.Logging;
@@ -22,6 +23,7 @@ namespace LevelExtender
         public static Logger Logger { get; private set; }
         public override void Entry(IModHelper helper)
         {
+            I18n.Init(helper.Translation);
             Config = helper.ReadConfig<ModConfig>();
             Logger = new Logger(Config, this.Monitor);
             levelExtender = new LevelExtender(Config, this.Helper, this.Monitor);

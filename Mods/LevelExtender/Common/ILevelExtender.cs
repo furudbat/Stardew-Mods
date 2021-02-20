@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using LevelExtender.Common;
-using LevelExtender.LEAPI;
 using LevelExtender.Logging;
 using Microsoft.Xna.Framework;
 using StardewValley;
 
-namespace LevelExtender
+namespace LevelExtender.Common
 {
     internal interface ILevelExtender
     {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using LevelExtender.Common;
 using LevelExtender.Logging;
 using Microsoft.Xna.Framework;
 using StardewValley;

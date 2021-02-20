@@ -1,4 +1,5 @@
-﻿using LevelExtender.Framework;
+﻿using LevelExtender.Common;
+using LevelExtender.Framework;
 
 namespace LevelExtender.Commands
 {

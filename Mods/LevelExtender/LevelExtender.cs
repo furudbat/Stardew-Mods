@@ -101,10 +101,15 @@ namespace LevelExtender
             var skill = Skills.FirstOrDefault(s => s.Name == skillName);
             return (skill != null) ? skill.Level : -1;
         }
+        public int GetSkillMaxLevel(string skillName)
+        {
+            var skill = Skills.FirstOrDefault(s => s.Name == skillName);
+            return (skill != null) ? skill.MaxLevel : -1;
+        }
         public int GetXPRequiredToLevel(string skillName, int level)
         {
             var skill = Skills.FirstOrDefault(s => s.Name == skillName);
-            return (skill != null && level < skill.XPTable.Count) ? skill.XPTable[level] : -1;
+            return (skill != null && level >= 0 && level < skill.XPTable.Count && level <= skill.MaxLevel) ? skill.XPTable[level] : (skill != null)? skill.MaxXP : -1;
         }
 
         public bool SetLevel(string name, int value)
@@ -153,10 +158,51 @@ namespace LevelExtender
         }
         private void InitSkills()
         {
+            Skills.Clear();
+            extraItemCategories.Clear();
             foreach (var skill in SkillsList.AllSkills)
             {
                 LESkill leSkill = new LESkill(skill, LEEvents, 1.0, new List<int>(REQUIRED_XP_TABLE));
                 Skills.Add(leSkill);
+                extraItemCategories.Add(skill.Type, new List<int>(skill.ExtraItemCategories()));
+            }
+
+            Dictionary<int, HashSet<string>> skillNames = new Dictionary<int, HashSet<string>>();
+            foreach (var cat_entry in extraItemCategories)
+            {
+                var skillName = cat_entry.Key.Name;
+                var itemCategories = cat_entry.Value;
+                foreach (var item_category in itemCategories)
+                {
+                    if (!skillNames.ContainsKey(item_category))
+                    {
+                        skillNames.Add(item_category, new HashSet<string>());
+                    }
+                    skillNames[item_category].Add(skillName);
+                }
+            }
+
+            extraItemCategorySkillNames.Clear();
+            foreach (var cat_entry in extraItemCategories)
+            {
+                var skillName = cat_entry.Key.Name;
+                var itemCategories = cat_entry.Value;
+                foreach (var itemCategory in itemCategories)
+                {
+                    if (skillNames.ContainsKey(itemCategory))
+                    {
+                        skillName = string.Join("/", skillNames[itemCategory]);
+                    }
+
+                    if (!extraItemCategorySkillNames.ContainsKey(itemCategory))
+                    {
+                        extraItemCategorySkillNames.Add(itemCategory, skillName);
+                    }
+                    else
+                    {
+                        extraItemCategorySkillNames[itemCategory] = skillName;
+                    }
+                }
             }
 
             ModEntry.Logger.LogVerbose($"InitSkills: skills {Skills.Count}");
@@ -452,19 +498,19 @@ namespace LevelExtender
             if (item == null || item.HasBeenInInventory)
                 return true;
 
-            int item_category = item.Category;
+            int itemCategory = item.Category;
             string message = "";
 
             //Logger.LogDebug($"DropExtraItems: {item.DisplayName} {item_category} {itemCategories}");
 
             int original_item_stack = item.Stack;
-            foreach (var cat_entry in itemCategories)
+            foreach (var cat_entry in extraItemCategories)
             {
                 if (message.Length > 0)
                     break;
 
                 var skillType = cat_entry.Key;
-                if (cat_entry.Value.Contains(item_category) && ShouldDoubleItem(skillType))
+                if (cat_entry.Value.Contains(itemCategory) && ShouldDoubleItem(skillType))
                 {
                     item.Stack += 1;
 
@@ -473,12 +519,17 @@ namespace LevelExtender
                         item.Stack += 1;
                     }
 
+                    string skillName = skillType.Name;
+                    if (extraItemCategorySkillNames.ContainsKey(itemCategory)) {
+                        skillName = extraItemCategorySkillNames[itemCategory];
+                    }
+
                     if (Config.DrawExtraItemNotifications)
                     {
                         if (Config.ExtraItemNotificationAmountMessage)
-                            message = helper.Translation.Get(LanguageKeys.ExtraItemMessageWithAmount, new { skillName = skillType.Name, extraItemAmount = item.Stack - original_item_stack, itemName = item.DisplayName });
+                            message = I18n.ExtraItemMessageWithAmount(skillName: skillName, extraItemAmount: item.Stack - original_item_stack, itemName: item.DisplayName);
                         else
-                            message = helper.Translation.Get(LanguageKeys.ExtraItemMessage, new { skillName = skillType.Name, itemName = item.DisplayName });
+                            message = I18n.ExtraItemMessage(skillName: skillName, itemName: item.DisplayName);
                     }
                 }
 
@@ -490,7 +541,7 @@ namespace LevelExtender
 
             if (message.Length > 0 && item.salePrice() >= Config.MinItemPriceForNotifications && message != lastMessage)
             {
-                const float HUB_MESSAGE_TIME_LEFT = 3000;
+                const float HUB_MESSAGE_TIME_LEFT = 2500;
                 var messageColor = Color.DeepSkyBlue;
 
                 if (Config.DrawNotificationsAsHUDMessage)
@@ -499,7 +550,7 @@ namespace LevelExtender
                     Game1.chatBox.addMessage(message, messageColor);
 
                 lastMessage = message;
-                SetTimerCooldownLastMessage(HUB_MESSAGE_TIME_LEFT * 2);
+                SetTimerCooldownLastMessage(HUB_MESSAGE_TIME_LEFT * 4);
             }
 
             return true;
@@ -631,10 +682,11 @@ namespace LevelExtender
         private LEEvents LEEvents = new LEEvents();
         private ExtendedExperienceBar XPBar;
         private Timer cooldownLastMessage;
-        private DateTime lastDrawXPBarsTime;
+        private DateTime lastDrawXPBarsTime = DateTime.Now;
         private bool firstFade = false;
         private string lastMessage = "";
-        private Dictionary<SkillType, List<int>> itemCategories = new Dictionary<SkillType, List<int>>();
+        private Dictionary<SkillType, List<int>> extraItemCategories = new Dictionary<SkillType, List<int>>();
+        private Dictionary<int, string> extraItemCategorySkillNames = new Dictionary<int, string>();
     }
 
 }

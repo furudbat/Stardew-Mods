@@ -3,5 +3,6 @@
   "ExtraItemMessage": "Your {{skillName}} level allowed you to obtain extra {{itemName}}(s)!",
   "ExtraItemMessageWithAmount": "Your {{skillName}} level allowed you to obtain {{extraItemAmount}} extra {{itemName}}!",
   "KAmountWithUnit": "{{amount}}k",
-  "XPUntilNextLevel":  "{{amount}}"
+  "XPUntilNextLevel": "~{{amount}}",
+  "Exp": "Exp {{amount}}"
 }

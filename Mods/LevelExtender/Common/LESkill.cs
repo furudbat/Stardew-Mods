@@ -8,11 +8,11 @@ namespace LevelExtender.Common
 {
     class LESkill : ILESkill
     {
-        public readonly int MAX_LVL = 100;
+        public readonly int MaxLevel = 100;
 
         public readonly Skill Skill;
         public LEEvents LEEvents { get; private set; }
-        public bool LevelByXp { get; private set; } = false;
+        public bool SetXPByLevel { get; private set; } = false;
         public int ChangedXP { get; private set; } = 0;
         public List<int> XPTable { get; private set; } = new List<int>();
         public double NeededXPFactor { get; set; } = 1.0;
@@ -42,12 +42,23 @@ namespace LevelExtender.Common
             {
                 if (_xp != value)
                 {
+                    value = Math.Max(0, Math.Min(MaxXP, value));
+                    ModEntry.Logger.LogDebug($"LESkill: {Name}, set XP {value}");
+
+                    int oldxp = _xp;
                     ChangedXP = value - _xp;
                     _xp = value;
+                    Skill.SetSkillExperience(_xp);
                     CheckForLevelUp();
-                    LEEvents.RaiseEvent(args);
 
-                    ModEntry.Logger.LogDebug($"LESkill: {Name}, set XP {value} (diff {ChangedXP})");
+                    LEEvents.RaiseEvent(new LEXPEventArgs
+                    {
+                        SkillName = Name,
+                        ChangedXP = ChangedXP,
+                        OldXP = oldxp,
+                        NewXP = _xp,
+                        CurrentLevel = Level
+                    });
                 }
             }
 
@@ -57,26 +68,35 @@ namespace LevelExtender.Common
             get { return _level; }
             set
             {
+                if (_level != value && value <= MaxLevel)
+                {
+                    value = Math.Max(0, Math.Min(MaxLevel, value));
+                    ModEntry.Logger.LogDebug($"LESkill: {Skill.Type.Name}, set Level {_level} -> {value}");
 
-                ModEntry.Logger.LogDebug($"LESkill: {Skill.Type.Name}, set Level {_level} -> {value}");
-
-                _level = value;
-                Skill.SetSkillLevel(value);
-
-                if (!LevelByXp)  {
+                    _level = value;
+                    Skill.SetSkillLevel(value);
                     int newxp = GetXPByLevel(Level);
-                    Skill.SetSkillExperience(newxp);
+                    int oldxp = _xp;
+                    ChangedXP = newxp - oldxp;
                     _xp = newxp;
-                    ModEntry.Logger.LogDebug($"LESkill: {Name}, set XP by Level; newxp: {newxp}");
-                }
-                LevelByXp = false;
+                    Skill.SetSkillExperience(_xp);
+                    LEEvents.RaiseEvent(new LEXPEventArgs
+                    {
+                        SkillName = Name,
+                        ChangedXP = ChangedXP,
+                        OldXP = oldxp,
+                        NewXP = newxp,
+                        CurrentLevel = Level
+                    });
 
-                ModEntry.Logger.LogDebug($"LESkill: {Name}, set Level {value}; xp: {XP}/{RequiredXPNextLevel}");
+                    ModEntry.Logger.LogDebug($"LESkill: {Name}, set Level {value}; xp: {XP}/{RequiredXPNextLevel}");
+                }
             }
         }
         public int RequiredXPNextLevel
         {
-            get {
+            get
+            {
                 return GetRequiredXP(Level);
             }
         }
@@ -85,26 +105,20 @@ namespace LevelExtender.Common
             Skill = skill;
             LEEvents = le_events;
             args.SkillName = Skill.Type.Name;
-            ItemCategories = new List<int> (Skill.ExtraItemCategories());
+            ItemCategories = new List<int>(Skill.ExtraItemCategories());
 
-            if (xp_table != null) {
+            if (xp_table != null)
+            {
                 XPTable = xp_table;
             }
             if (needed_xp_factor != null)
             {
                 NeededXPFactor = needed_xp_factor.Value;
             }
-
-            _level = skill.GetSkillLevel();
+            GenerateXPTable(MaxLevel+1);
+            _level = Skill.GetSkillLevel();
             _xp = skill.GetSkillExperience();
-
-            GenerateXPTable(MAX_LVL);
-            if (XPTable != null && XPTable.Count > 0)
-            {
-                MaxXP = XPTable.Max();
-                ModEntry.Logger.LogDebug($"LESkill: {Name}, max XP {MaxXP}");
-            }
-
+            Skill.SetSkillExperience(_xp);
             CheckForLevelUp();
 
             ModEntry.Logger.LogDebug($"LESkill: {Name} lvl: {_level}; xp: {_xp}/{RequiredXPNextLevel}; xpt count: {XPTable.Count}");
@@ -113,20 +127,20 @@ namespace LevelExtender.Common
 
         public int GetRequiredXP(int level)
         {
-            if (level < XPTable.Count)
+            if (level < XPTable.Count && level <= MaxLevel)
+            {
                 return XPTable[level];
-            else
-                GenerateXPTable(level);
-
-            return (level < XPTable.Count) ? XPTable[level] : -1;
+            }
+            return MaxXP;
         }
 
         public int GetXPByLevel(int level)
         {
-            if (level <= 0)
+            if (level == 0)
                 return 0;
-            if (level-1 < XPTable.Count)
-                return XPTable[level-1];
+
+            if (level > 0 && level - 1 < XPTable.Count)
+                return XPTable[level - 1];
 
             return MaxXP;
         }
@@ -135,18 +149,20 @@ namespace LevelExtender.Common
         {
             int level = GetLevelByXP();
 
-            if (_level != level)
+            ModEntry.Logger.LogDebug($"checkForLevelUp: old: {_level}, new: {level}");
+
+            if (level >= 0 && level <= XPTable.Count && level <= MaxLevel && _level != level)
             {
-                ModEntry.Logger.LogDebug($"checkForLevelUp: xp: {_xp}, lvl: {_level} -> {level}, xp_table: {XPTable[level]} -> {XPTable[_level]}");
-                LevelByXp = true;
-                Level = level;
+                _level = level;
+                Skill.SetSkillLevel(level);
+                ModEntry.Logger.LogDebug($"checkForLevelUp: xp: {_xp}, lvl: {_level} -> {level}, xp_table: {XPTable[level]}");
             }
         }
 
 
         public int GetLevelByXP()
         {
-            if (XPTable.Count > 0 && _xp > MaxXP) 
+            if (XPTable.Count > 0 && _xp > MaxXP)
                 return XPTable.Count - 1;
 
             int ret = 0;
@@ -154,7 +170,7 @@ namespace LevelExtender.Common
             {
                 if (_xp >= XPTable[lvl])
                 {
-                    ret = lvl;
+                    ret = lvl+1;
                 }
             }
 
@@ -172,9 +188,9 @@ namespace LevelExtender.Common
                 XPTable.Add(xp);
             }
 
-            MaxXP = XPTable.Max();
+            MaxXP = (MaxLevel - 1 < XPTable.Count) ? XPTable[MaxLevel-1] : XPTable.Max();
 
-            ModEntry.Logger.LogDebug($"generateXPTable {level}; needed XP: {XPTable[0]}, {XPTable[1]}, ..., {XPTable[XPTable.Count/2]}, ..., {XPTable[XPTable.Count-1]} ");
+            ModEntry.Logger.LogDebug($"generateXPTable {level}; needed XP: {XPTable[0]}, {XPTable[1]}, ..., {XPTable[XPTable.Count / 2]}, ..., {XPTable[XPTable.Count - 1]}; max XP {MaxXP}");
         }
 
         private int _level = 0;

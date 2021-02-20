@@ -25,7 +25,7 @@ namespace LevelExtender.UIElements
             _position.Y -= 0.5f;
             --_alpha;
             Game1.drawWithBorder(
-                "Exp " + _experiencePoints,
+                I18n.Exp(amount: _experiencePoints),
                 Color.DarkSlateGray * ((float)_alpha / 100f),
                 Color.PaleTurquoise * ((float)_alpha / 100f),
                 new Vector2(_position.X - 28, _position.Y - 130),

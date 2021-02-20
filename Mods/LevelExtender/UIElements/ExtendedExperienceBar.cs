@@ -19,10 +19,10 @@ namespace LevelExtender.UIElements
     // ExperienceBar from Ui-Info-Suite by Cdaragorn - https://github.com/cdaragorn/Ui-Info-Suite
     class ExtendedExperienceBar : IDisposable
     {
-        private const int MaxBarWidth = 175;
+        private const int MaxBarWidth = 180;
 
-        private Dictionary<string, int> _currentExperience = new Dictionary<string, int>();
-        private readonly List<ExperiencePointDisplay> _experiencePointDisplays = new List<ExperiencePointDisplay>();
+        private Dictionary<string, int> _lastXPs = new Dictionary<string, int>();
+        private readonly List<ExperiencePointDisplay> _XPDisplays = new List<ExperiencePointDisplay>();
         private readonly TimeSpan _levelUpPauseTime = TimeSpan.FromSeconds(2);
         private readonly Color _iconColor = Color.White;
         private Color _experienceFillColor = Color.Blue;
@@ -40,9 +40,10 @@ namespace LevelExtender.UIElements
         private readonly IModHelper _helper;
 
         private int _currentSkillLevel = 0;
-        private int _experienceRequiredToLevel = -1;
-        private int _experienceFromPreviousLevels = -1;
-        private int _experienceEarnedThisLevel = -1;
+        private int _currentXP = 0;
+        private int _requiredXPPrevLevel = -1;
+        private int _requiredXPNextLevel = -1;
+        private int _maxSkillLevel = -1;
 
         private LEModApi _levelExtender;
 
@@ -56,7 +57,7 @@ namespace LevelExtender.UIElements
             _levelExtender = levelExtender;
             foreach (var skill in _levelExtender.GetSkills())
             {
-                _currentExperience.Add(skill.Name, skill.XP);
+                _lastXPs.Add(skill.Name, skill.XP);
             }
         }
 
@@ -67,10 +68,12 @@ namespace LevelExtender.UIElements
             _helper.Events.Display.RenderingHud -= OnDisplayRenderingHud;
             _helper.Events.Player.Warped -= PlayerOnWarped;
             _helper.Events.GameLoop.UpdateTicked -= OnUpdateTicked;
-            _timeToDisappear.Elapsed -= StopTimerAndFadeBarOut;
-            _timeToDisappear.Stop();
-            _timeToDisappear.Dispose();
-            _timeToDisappear = null;
+            if (_timeToDisappear != null) {
+                _timeToDisappear.Elapsed -= StopTimerAndFadeBarOut;
+                _timeToDisappear.Stop();
+                _timeToDisappear.Dispose();
+                _timeToDisappear = null; 
+            }
         }
 
         public void ToggleLevelUpAnimation(bool showLevelUpAnimation)
@@ -114,37 +117,6 @@ namespace LevelExtender.UIElements
             }
         }
 
-        /// <summary>Raised after a player skill level changes. This happens as soon as they level up, not when the game notifies the player after their character goes to bed.</summary>
-        /// <param name="sender">The event sender.</param>
-        /// <param name="e">The event arguments.</param>
-        private void OnPlayerLevelChanged(object sender, LevelChangedEventArgs e)
-        {
-            ModEntry.Logger.LogDebug($"ExtendedExperienceBar.OnLevelChanged: {e.Skill} {e.OldLevel} -> {e.NewLevel}");
-
-            if (_showLevelUpAnimation && e.IsLocalPlayer)
-            {
-                switch (e.Skill)
-                {
-                    case StardewModdingAPI.Enums.SkillType.Combat: _levelUpIconRectangle.X = 120; break;
-                    case StardewModdingAPI.Enums.SkillType.Farming: _levelUpIconRectangle.X = 10; break;
-                    case StardewModdingAPI.Enums.SkillType.Fishing: _levelUpIconRectangle.X = 20; break;
-                    case StardewModdingAPI.Enums.SkillType.Foraging: _levelUpIconRectangle.X = 60; break;
-                    case StardewModdingAPI.Enums.SkillType.Mining: _levelUpIconRectangle.X = 30; break;
-                }
-
-                if (_showExperienceBar)
-                {
-                    _shouldDrawLevelUp = true;
-                    ShowExperienceBar();
-
-                    Task.Factory.StartNew(() =>
-                    {
-                        Thread.Sleep(_levelUpPauseTime);
-                        _shouldDrawLevelUp = false;
-                    });
-                }
-            }
-        }
 
         private void StopTimerAndFadeBarOut(object sender, ElapsedEventArgs e)
         {
@@ -158,7 +130,7 @@ namespace LevelExtender.UIElements
         private void PlayerOnWarped(object sender, WarpedEventArgs e)
         {
             if (e.IsLocalPlayer)
-                _experiencePointDisplays.Clear();
+                _XPDisplays.Clear();
         }
 
         /// <summary>Raised after the game state is updated (≈60 times per second).</summary>
@@ -173,148 +145,117 @@ namespace LevelExtender.UIElements
                 return;
 
             Item currentItem = Game1.player.CurrentItem;
-            string currentLevelSkillName = "";
+            string skillName = "";
 
             if (_previousItem != currentItem)
             {
                 if (currentItem is FishingRod)
                 {
-                    _experienceFillColor = new Color(17, 84, 252, 0.63f);
-                    currentLevelSkillName = DefaultSkillNames.Fishing;
-                    _experienceIconPosition.X = 20;
-                    _currentSkillLevel = _levelExtender.GetSkillLevel(currentLevelSkillName);
+                    skillName = DefaultSkillNames.Fishing;
                 }
                 else if (currentItem is Pickaxe)
                 {
-                    _experienceFillColor = new Color(145, 104, 63, 0.63f);
-                    currentLevelSkillName = DefaultSkillNames.Mining;
-                    _experienceIconPosition.X = 30;
-                    _currentSkillLevel = _levelExtender.GetSkillLevel(currentLevelSkillName);
+                    skillName = DefaultSkillNames.Mining;
                 }
                 else if (currentItem is MeleeWeapon && currentItem.Name != "Scythe")
                 {
-                    _experienceFillColor = new Color(204, 0, 3, 0.63f);
-                    currentLevelSkillName = DefaultSkillNames.Combat;
-                    _experienceIconPosition.X = 120;
-                    _currentSkillLevel = _levelExtender.GetSkillLevel(currentLevelSkillName);
+                    skillName = DefaultSkillNames.Combat;
                 }
                 else if (Game1.currentLocation is Farm && !(currentItem is Axe))
                 {
-                    _experienceFillColor = new Color(255, 251, 35, 0.38f);
-                    currentLevelSkillName = DefaultSkillNames.Farming;
-                    _experienceIconPosition.X = 10;
-                    _currentSkillLevel = _levelExtender.GetSkillLevel(currentLevelSkillName);
+                    skillName = DefaultSkillNames.Farming;
                 }
                 else
                 {
-                    _experienceFillColor = new Color(0, 234, 0, 0.63f);
-                    currentLevelSkillName = DefaultSkillNames.Foraging;
-                    _experienceIconPosition.X = 60;
-                    _currentSkillLevel = _levelExtender.GetSkillLevel(currentLevelSkillName);
+                    skillName = DefaultSkillNames.Foraging;
                 }
+                int xp = _levelExtender.GetSkillCurrentXP(skillName);
+                int skillLevel = _levelExtender.GetSkillLevel(skillName);
+                int requiredXPNextLevel = _levelExtender.GetXPRequiredToLevel(skillName, skillLevel);
+                int requiredXPPrevLevel = (skillLevel > 0) ? _levelExtender.GetXPRequiredToLevel(skillName, skillLevel - 1) : 0;
+                int maxSkillLevel = _levelExtender.GetSkillMaxLevel(skillName);
 
-                if (currentLevelSkillName != "" && _experienceRequiredToLevel <= 0 && _currentExperience.ContainsKey(currentLevelSkillName))
-                {
-                    _experienceEarnedThisLevel = _levelExtender.GetSkillCurrentXP(currentLevelSkillName);
-                    _experienceFromPreviousLevels = _currentExperience[currentLevelSkillName] - _experienceEarnedThisLevel;
-                    _experienceRequiredToLevel = _levelExtender.GetSkillRequiredXP(currentLevelSkillName) + _experienceFromPreviousLevels;
-                }
+                ModEntry.Logger.LogDebug($"ExtendedExperienceBar.OnUpdateTicked change item: skill: {skillName}, lvl: {skillLevel}, xp: {xp}, prev. {requiredXPPrevLevel}/{requiredXPNextLevel}");
 
-                if (_showExperienceBar && currentLevelSkillName != "")
+                if (_showExperienceBar && skillName != "")
                 {
-                    ShowExperienceBar();
+                    ShowExperienceBar(skillName, xp, skillLevel, requiredXPNextLevel, requiredXPPrevLevel, maxSkillLevel);
                 }
                 _previousItem = currentItem;
             }
         }
         private void OnXPChanged(object sender, LEXPEventArgs args)
         {
-            string currentLevelSkillName = args.SkillName;
-            int currentXP = _levelExtender.GetSkillCurrentXP(currentLevelSkillName);
-            _currentSkillLevel = _levelExtender.GetSkillLevel(currentLevelSkillName);
+            string skillName = args.SkillName;
+            int xp = args.NewXP;
+            int skillLevel = args.CurrentLevel;
+            int changedXP = args.ChangedXP;
+            int requiredXPNextLevel = _levelExtender.GetXPRequiredToLevel(skillName, skillLevel);
+            int requiredXPPrevLevel = (skillLevel > 0)? _levelExtender.GetXPRequiredToLevel(skillName, skillLevel-1) : 0;
+            int maxSkillLevel = _levelExtender.GetSkillMaxLevel(skillName);
 
-            ModEntry.Logger.LogDebug($"ExtendedExperienceBar.OnXPChanged: {currentLevelSkillName}, lvl: {_currentSkillLevel}, xp: {currentXP}");
+            ModEntry.Logger.LogDebug($"ExtendedExperienceBar.OnXPChanged: {skillName}, lvl: {skillLevel}, xp: {xp} ({changedXP}), prev. {requiredXPPrevLevel}/{requiredXPNextLevel}");
 
-            if (currentLevelSkillName != null)
+            if (_showExperienceBar && changedXP > 0 && skillName != "")
             {
-                switch (currentLevelSkillName)
+                ShowExperienceBar(skillName, xp, skillLevel, requiredXPNextLevel, requiredXPPrevLevel, maxSkillLevel);
+            }
+            if (_showExperienceGain &&
+                changedXP > 0 &&
+                _lastXPs.ContainsKey(skillName))
+            {
+                _XPDisplays.Add(
+                    new ExperiencePointDisplay(
+                        changedXP,
+                        Game1.player.getLocalPosition(Game1.viewport)));
+            }
+
+            if (_lastXPs.ContainsKey(skillName))
+            {
+                _lastXPs[skillName] = _currentXP;
+            }
+            else
+            {
+                _lastXPs.Add(skillName, _currentXP);
+            }
+        }
+
+        /// <summary>Raised after a player skill level changes. This happens as soon as they level up, not when the game notifies the player after their character goes to bed.</summary>
+        /// <param name="sender">The event sender.</param>
+        /// <param name="e">The event arguments.</param>
+        private void OnPlayerLevelChanged(object sender, LevelChangedEventArgs e)
+        {
+            ModEntry.Logger.LogDebug($"ExtendedExperienceBar.OnLevelChanged: {e.Skill} {e.OldLevel} -> {e.NewLevel}");
+
+            if (_showLevelUpAnimation && e.IsLocalPlayer)
+            {
+                string skillName = "";
+                switch (e.Skill)
                 {
-                    case DefaultSkillNames.Farming:
-                        {
-                            _experienceFillColor = new Color(255, 251, 35, 0.38f);
-                            _experienceIconPosition.X = 10;
-                            break;
-                        }
-
-                    case DefaultSkillNames.Fishing:
-                        {
-                            _experienceFillColor = new Color(17, 84, 252, 0.63f);
-                            _experienceIconPosition.X = 20;
-                            break;
-                        }
-
-                    case DefaultSkillNames.Foraging:
-                        {
-                            _experienceFillColor = new Color(0, 234, 0, 0.63f);
-                            _experienceIconPosition.X = 60;
-                            break;
-                        }
-
-                    case DefaultSkillNames.Mining:
-                        {
-                            _experienceFillColor = new Color(145, 104, 63, 0.63f);
-                            _experienceIconPosition.X = 30;
-                            break;
-                        }
-
-                    case DefaultSkillNames.Combat:
-                        {
-                            _experienceFillColor = new Color(204, 0, 3, 0.63f);
-                            _experienceIconPosition.X = 120;
-                            break;
-                        }
+                    case StardewModdingAPI.Enums.SkillType.Combat: skillName = DefaultSkillNames.Combat; break;
+                    case StardewModdingAPI.Enums.SkillType.Farming: skillName = DefaultSkillNames.Farming; break;
+                    case StardewModdingAPI.Enums.SkillType.Fishing: skillName = DefaultSkillNames.Fishing; break;
+                    case StardewModdingAPI.Enums.SkillType.Foraging: skillName = DefaultSkillNames.Foraging; break;
+                    case StardewModdingAPI.Enums.SkillType.Mining: skillName = DefaultSkillNames.Mining; break;
                 }
-
-                _experienceRequiredToLevel = (_currentSkillLevel >= 0) ? GetExperienceRequiredToLevel(currentLevelSkillName, _currentSkillLevel) : 0;
-                _experienceFromPreviousLevels = (_currentSkillLevel >= 1) ? GetExperienceRequiredToLevel(currentLevelSkillName, _currentSkillLevel - 1) : 0;
-                _experienceEarnedThisLevel = currentXP - _experienceFromPreviousLevels;
-                //int experiencePreviouslyEarnedThisLevel = _currentExperience[currentLevelSkillName] - _experienceFromPreviousLevels;
-
-                if (_experienceRequiredToLevel <= 0 && _currentExperience.ContainsKey(currentLevelSkillName))
-                {
-                    _experienceEarnedThisLevel = _levelExtender.GetSkillCurrentXP(currentLevelSkillName);
-                    _experienceFromPreviousLevels = _currentExperience[currentLevelSkillName] - _experienceEarnedThisLevel;
-                    _experienceRequiredToLevel = _levelExtender.GetSkillRequiredXP(currentLevelSkillName) + _experienceFromPreviousLevels;
-                }
+                int skillLevel = e.NewLevel;
+                int xp = _levelExtender.GetSkillCurrentXP(skillName);
+                int requiredXPNextLevel = _levelExtender.GetXPRequiredToLevel(skillName, skillLevel);
+                int requiredXPPrevLevel = (skillLevel > 0) ? _levelExtender.GetXPRequiredToLevel(skillName, skillLevel - 1) : 0;
+                int maxSkillLevel = _levelExtender.GetSkillMaxLevel(skillName);
 
                 if (_showExperienceBar)
                 {
-                    ShowExperienceBar();
-                }
-                if (_showExperienceGain &&
-                    _experienceRequiredToLevel > 0 &&
-                    _currentExperience.ContainsKey(currentLevelSkillName))
-                {
-                    int currentExperienceToUse = _levelExtender.GetSkillCurrentXP(currentLevelSkillName);
-                    int previousExperienceToUse = _currentExperience[currentLevelSkillName];
-                    int experienceGain = currentExperienceToUse - previousExperienceToUse;
+                    _shouldDrawLevelUp = true;
+                    ShowExperienceBar(skillName, xp, skillLevel, requiredXPNextLevel, requiredXPPrevLevel, maxSkillLevel);
 
-                    if (experienceGain > 0)
+                    Task.Factory.StartNew(() =>
                     {
-                        _experiencePointDisplays.Add(
-                            new ExperiencePointDisplay(
-                                experienceGain,
-                                Game1.player.getLocalPosition(Game1.viewport)));
-                    }
+                        Thread.Sleep(_levelUpPauseTime);
+                        _shouldDrawLevelUp = false;
+                    });
                 }
-
-                if (_currentExperience.ContainsKey(currentLevelSkillName))
-                    _currentExperience[currentLevelSkillName] = _levelExtender.GetSkillCurrentXP(currentLevelSkillName);
-                else
-                    _currentExperience.Add(currentLevelSkillName, _levelExtender.GetSkillCurrentXP(currentLevelSkillName));
             }
-
-            ModEntry.Logger.LogDebug($"ExtendedExperienceBar.OnXPChanged: prev. {_experienceFromPreviousLevels}, earned {_experienceEarnedThisLevel}, req. {_experienceRequiredToLevel}");
         }
 
         /// <summary>Raised before drawing the HUD (item toolbar, clock, etc) to the screen. The vanilla HUD may be hidden at this point (e.g. because a menu is open).</summary>
@@ -341,7 +282,7 @@ namespace LevelExtender.UIElements
                         0.85f);
 
                     Game1.drawWithBorder(
-                        _helper.Translation.Get(LanguageKeys.LevelUp),
+                        _helper.Translation.Get(I18n.LevelUp()),
                         Color.DarkSlateGray,
                         Color.PaleTurquoise,
                         new Vector2(
@@ -351,39 +292,76 @@ namespace LevelExtender.UIElements
 
                 if (_showExperienceGain)
                 {
-                    for (int i = _experiencePointDisplays.Count - 1; i >= 0; --i)
+                    for (int i = _XPDisplays.Count - 1; i >= 0; --i)
                     {
-                        if (_experiencePointDisplays[i].IsInvisible)
+                        if (_XPDisplays[i].IsInvisible)
                         {
-                            _experiencePointDisplays.RemoveAt(i);
+                            _XPDisplays.RemoveAt(i);
                         }
                         else
                         {
-                            _experiencePointDisplays[i].Draw();
+                            _XPDisplays[i].Draw();
                         }
                     }
                 }
 
-                if (_experienceRequiredToLevel > 0 &&
-                    _experienceBarShouldBeVisible &&
+                if (_experienceBarShouldBeVisible &&
                     _showExperienceBar)
                 {
-                    int experienceDifferenceBetweenLevels = _experienceRequiredToLevel - _experienceFromPreviousLevels;
-                    int barWidth = (experienceDifferenceBetweenLevels > 0) ? (int)((double)_experienceEarnedThisLevel / experienceDifferenceBetweenLevels * MaxBarWidth) : 0;
+                    int maxExperience = (_requiredXPNextLevel > 0 )? _requiredXPNextLevel - _requiredXPPrevLevel : -1;
+                    int currentExperience = _currentXP - _requiredXPPrevLevel;
+                    int progressBarWidth = (maxExperience > 0) ? (int)((double)currentExperience / maxExperience * MaxBarWidth) : 0;
 
-                    DrawExperienceBar(barWidth, _experienceEarnedThisLevel, experienceDifferenceBetweenLevels, _currentSkillLevel);
+                    DrawExperienceBar(progressBarWidth, _currentSkillLevel, currentExperience, maxExperience, _maxSkillLevel);
                 }
-
             }
         }
 
-        private int GetExperienceRequiredToLevel(string skillName, int level)
+        private void ShowExperienceBar(string currentLevelSkillName, int currentXP, int currentSkillLevel, int requiredXPNextLevel, int requiredXPPrevLevel, int maxSkillLevel)
         {
-            return _levelExtender.GetXPRequiredToLevel(skillName, level);
-        }
+            _currentXP = currentXP;
+            _currentSkillLevel = currentSkillLevel;
+            _requiredXPPrevLevel = requiredXPPrevLevel;
+            _requiredXPNextLevel = requiredXPNextLevel;
+            _maxSkillLevel = maxSkillLevel;
 
-        private void ShowExperienceBar()
-        {
+            switch (currentLevelSkillName)
+            {
+                case DefaultSkillNames.Farming:
+                    {
+                        _experienceFillColor = new Color(255, 251, 35, 0.38f);
+                        _experienceIconPosition.X = 10;
+                        break;
+                    }
+
+                case DefaultSkillNames.Fishing:
+                    {
+                        _experienceFillColor = new Color(17, 84, 252, 0.63f);
+                        _experienceIconPosition.X = 20;
+                        break;
+                    }
+
+                case DefaultSkillNames.Foraging:
+                    {
+                        _experienceFillColor = new Color(0, 234, 0, 0.63f);
+                        _experienceIconPosition.X = 60;
+                        break;
+                    }
+
+                case DefaultSkillNames.Mining:
+                    {
+                        _experienceFillColor = new Color(145, 104, 63, 0.63f);
+                        _experienceIconPosition.X = 30;
+                        break;
+                    }
+
+                case DefaultSkillNames.Combat:
+                    {
+                        _experienceFillColor = new Color(204, 0, 3, 0.63f);
+                        _experienceIconPosition.X = 120;
+                        break;
+                    }
+            }
             if (_timeToDisappear != null)
             {
                 if (_allowExperienceBarToFadeOut)
@@ -400,14 +378,13 @@ namespace LevelExtender.UIElements
             _experienceBarShouldBeVisible = true;
         }
 
-        private void DrawExperienceBar(int barWidth, int experienceGainedThisLevel, int experienceRequiredForNextLevel, int currentLevel)
+        private void DrawExperienceBar(int progressBarWidth, int currentLevel, int currentExperience, int maxExperience, int maxSkillLevel)
         {
             float leftSide = Game1.graphics.GraphicsDevice.Viewport.TitleSafeArea.Left;
 
             if (Game1.isOutdoorMapSmallerThanViewport())
             {
-                int num3 = Game1.currentLocation.map.Layers[0].LayerWidth * Game1.tileSize;
-                leftSide += (Game1.graphics.GraphicsDevice.Viewport.TitleSafeArea.Right - num3) / 2;
+                leftSide += (Game1.graphics.GraphicsDevice.Viewport.TitleSafeArea.Right - (Game1.currentLocation.map.Layers[0].LayerWidth * Game1.tileSize)) / 2;
             }
 
             Game1.drawDialogueBox(
@@ -423,7 +400,7 @@ namespace LevelExtender.UIElements
                 new Rectangle(
                     (int)leftSide + 32,
                     Game1.graphics.GraphicsDevice.Viewport.TitleSafeArea.Bottom - 63,
-                    barWidth,
+                    progressBarWidth,
                     31),
                 _experienceFillColor);
 
@@ -432,7 +409,7 @@ namespace LevelExtender.UIElements
                 new Rectangle(
                     (int)leftSide + 32,
                     Game1.graphics.GraphicsDevice.Viewport.TitleSafeArea.Bottom - 63,
-                    Math.Min(4, barWidth),
+                    Math.Min(4, progressBarWidth),
                     31),
                 _experienceFillColor);
 
@@ -441,7 +418,7 @@ namespace LevelExtender.UIElements
                 new Rectangle(
                     (int)leftSide + 32,
                     Game1.graphics.GraphicsDevice.Viewport.TitleSafeArea.Bottom - 63,
-                    barWidth,
+                    progressBarWidth,
                     4),
                 _experienceFillColor);
 
@@ -450,7 +427,7 @@ namespace LevelExtender.UIElements
                 new Rectangle(
                     (int)leftSide + 32,
                     Game1.graphics.GraphicsDevice.Viewport.TitleSafeArea.Bottom - 36,
-                    barWidth,
+                    progressBarWidth,
                     4),
                 _experienceFillColor);
 
@@ -468,17 +445,22 @@ namespace LevelExtender.UIElements
                     new Rectangle(0, 0, 0, 0),
                     Game1.pixelZoom);
 
-            if (textureComponent.containsPoint(Game1.getMouseX(), Game1.getMouseY()))
+            if (currentLevel < maxSkillLevel && textureComponent.containsPoint(Game1.getMouseX(), Game1.getMouseY()))
             {
-                string strExperienceGainedThisLevelAmount = (experienceGainedThisLevel >= 10000) ? experienceGainedThisLevel.ToString().Substring(0, 2) : experienceGainedThisLevel.ToString();
-                string strExperienceRequiredForNextLevelAmount = (experienceRequiredForNextLevel >= 10000) ? experienceRequiredForNextLevel.ToString().Substring(0, 2) : experienceRequiredForNextLevel.ToString();
+                string strCurrentExperience = currentExperience.ToString();
+                string strMaxExperience = maxExperience.ToString();
+                strCurrentExperience = (currentExperience >= 10000) ? strCurrentExperience.Substring(0, strCurrentExperience.Length-4) : strCurrentExperience;
+                strMaxExperience = (maxExperience >= 10000) ? maxExperience.ToString().Substring(0, strMaxExperience.Length-4) : strMaxExperience;
 
-                string strExperienceGainedThisLevel = (experienceGainedThisLevel >= 10000) ? this._helper.Translation.Get(LanguageKeys.KAmountWithUnit, new { amount = strExperienceGainedThisLevelAmount }).Default(strExperienceGainedThisLevelAmount + "k") : strExperienceGainedThisLevelAmount;
-                string strExperienceRequiredForNextLevel = (experienceRequiredForNextLevel >= 10000) ? this._helper.Translation.Get(LanguageKeys.KAmountWithUnit, new { amount = strExperienceRequiredForNextLevelAmount }).Default(strExperienceRequiredForNextLevelAmount + "k") : strExperienceRequiredForNextLevelAmount;
+                string txtCurrentExperience = (currentExperience >= 10000) ? I18n.KAmountWithUnit(amount: strCurrentExperience) : strCurrentExperience;
+                string txtMaxExperience = (maxExperience >= 10000) ? I18n.KAmountWithUnit(amount: strMaxExperience) : strMaxExperience;
+                if (maxExperience < 0) {
+                    txtMaxExperience = "---";
+                }
 
-                string barText = $"{strExperienceGainedThisLevel}/{strExperienceRequiredForNextLevel}";
-                if (experienceGainedThisLevel >= 10000 && experienceRequiredForNextLevel >= 10000) {
-                    barText = this._helper.Translation.Get(LanguageKeys.XPUntilNextLevel, new { amount = experienceRequiredForNextLevel - experienceGainedThisLevel });
+                string barText = (maxExperience >= 0)? $"{txtCurrentExperience}/{txtMaxExperience}" : txtCurrentExperience;
+                if (currentExperience >= 10000 && maxExperience >= 10000) {
+                    barText = I18n.XPUntilNextLevel(amount: maxExperience - currentExperience);
                 }
 
                 Game1.drawWithBorder(
@@ -494,7 +476,7 @@ namespace LevelExtender.UIElements
                 Game1.spriteBatch.Draw(
                     Game1.mouseCursors,
                     new Vector2(
-                        leftSide + ((currentLevel >= 10) ? 84 : 54),
+                        leftSide + ((currentLevel >= 100) ? 92 : (currentLevel >= 10) ? 76 : 54),
                         Game1.graphics.GraphicsDevice.Viewport.TitleSafeArea.Bottom - 62),
                     _experienceIconPosition,
                     _iconColor,

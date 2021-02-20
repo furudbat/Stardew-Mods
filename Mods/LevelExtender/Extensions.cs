@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using LevelExtender.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace LevelExtender
 {
-    // from SkillPrestige by Alphablackwolf - https://github.com/Alphablackwolf/SkillPrestige
-    internal static class Utils
+    /// <summary>
+    /// Extensions from SkillPrestige by Alphablackwolf - https://github.com/Alphablackwolf/SkillPrestige
+    /// </summary>
+    internal static class Extensions
     {
         /// <summary>gets the field from an object through reflection, even if it is a private field.</summary>
         /// <typeparam name="T">The type that contains the parameter member</typeparam>

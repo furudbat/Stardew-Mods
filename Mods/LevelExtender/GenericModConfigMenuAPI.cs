@@ -5,6 +5,9 @@ using StardewModdingAPI;
 
 namespace LevelExtender
 {
+    /// <summary>
+    /// GenericModConfigMenu by spacechase0 - https://github.com/spacechase0/GenericModConfigMenu
+    /// </summary>
     public interface GenericModConfigMenuAPI
     {
         void RegisterModConfig(IManifest mod, Action revertToDefault, Action saveToFile);

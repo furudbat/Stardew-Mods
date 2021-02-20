@@ -15,6 +15,7 @@ namespace LevelExtender.LEAPI
         int GetSkillCurrentXP(string skillName);
         int GetSkillRequiredXP(string skillName);
         int GetSkillLevel(string skillName);
+        int GetSkillMaxLevel(string skillName);
         int GetXPRequiredToLevel(string skillName, int level);
 
         //*** SKILL COMPATIBILITY ***//
