@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Harmony;
 using LevelExtender.Common;
 using LevelExtender.Framework;
@@ -29,18 +30,7 @@ namespace LevelExtender
             levelExtender = new LevelExtender(Config, this.Helper, this.Monitor);
 
             var harmony = HarmonyInstance.Create(this.ModManifest.UniqueID);
-            Type[] types1 = { typeof(Microsoft.Xna.Framework.Rectangle), typeof(int), typeof(int), typeof(bool), typeof(float), typeof(int), typeof(float), typeof(float), typeof(bool), typeof(Farmer) };
-            Type[] types2 = { typeof(Item) };
-            Type[] types3 = { typeof(Item), typeof(bool) };
-
-            harmony.Patch(
-                    original: AccessTools.Method(typeof(GameLocation), nameof(GameLocation.damageMonster), types1),
-                    prefix: new HarmonyMethod(typeof(GameLocationPatch), nameof(GameLocationPatch.damageMonster_Prefix))
-                );
-            harmony.Patch(
-                    original: AccessTools.Method(typeof(Farmer), nameof(Farmer.addItemToInventoryBool), types3),
-                    prefix: new HarmonyMethod(typeof(FarmerPatch), nameof(FarmerPatch.addItemToInventoryBool_Prefix))
-                );
+            harmony.PatchAll(Assembly.GetExecutingAssembly());
 
             RegisterGameEvents(helper.Events);
 
@@ -75,22 +65,29 @@ namespace LevelExtender
                 configMenuApi.RegisterModConfig(ModManifest, () => Config = new ModConfig(), () => Helper.WriteConfig(Config));
 
                 configMenuApi.RegisterLabel(ModManifest, "Notifications", "Notifications and Display XP Bars");
-                configMenuApi.RegisterSimpleOption(ModManifest, "Show XP Bars", "Enable XP Bar", () => Config.DrawXPBars, (bool val) => Config.DrawXPBars = val);
-                configMenuApi.RegisterSimpleOption(ModManifest, "Show XP Gain", "Show Gained XP", () => Config.DrawXPGain, (bool val) => Config.DrawXPGain = val);
-                configMenuApi.RegisterSimpleOption(ModManifest, "Extra Item Noti. Message", "", () => Config.DrawExtraItemNotifications, (bool val) => Config.DrawExtraItemNotifications = val);
-                configMenuApi.RegisterSimpleOption(ModManifest, "Noti. in HUB", "Show Notification in HUB, otherwise in Chat", () => Config.DrawNotificationsAsHUDMessage, (bool val) => Config.DrawNotificationsAsHUDMessage = val);
-                configMenuApi.RegisterSimpleOption(ModManifest, "Min. Item Price For Noti.", "Show Extra Item Notifications with minimum Item Price", () => Config.MinItemPriceForNotifications, (int val) => Config.MinItemPriceForNotifications = val);
-                configMenuApi.RegisterSimpleOption(ModManifest, "Extra Item Noti. with Amount", "Show Extra Item Notification with Extra Item Amount, otherwise shows only a simple message", () => Config.ExtraItemNotificationAmountMessage, (bool val) => Config.ExtraItemNotificationAmountMessage = val);
+                configMenuApi.RegisterSimpleOption(ModManifest, "Show XP Bars", "Enable XP Bar, like in Ui-Info-Suite", () => Config.DrawXPBars, (bool val) => Config.DrawXPBars = val);
+                configMenuApi.RegisterSimpleOption(ModManifest, "Show XP Gain", "Show Gained XP, like in Ui-Info-Suite", () => Config.DrawXPGain, (bool val) => Config.DrawXPGain = val);
+                configMenuApi.RegisterSimpleOption(ModManifest, "Extra Item Noti. Message", "Shows Message when gets Extra Items from Drops, see 'Enable Drop Extra Items'", () => Config.DrawExtraItemNotifications, (bool val) => Config.DrawExtraItemNotifications = val);
+                configMenuApi.RegisterSimpleOption(ModManifest, "Noti. in HUB", "Show Notification in HUB, otherwise in Chat.", () => Config.DrawNotificationsAsHUDMessage, (bool val) => Config.DrawNotificationsAsHUDMessage = val);
+                configMenuApi.RegisterSimpleOption(ModManifest, "Min. Item Price For Noti.", "Show Extra Item Notifications with minimum Item Price.", () => Config.MinItemPriceForNotifications, (int val) => Config.MinItemPriceForNotifications = val);
+                configMenuApi.RegisterSimpleOption(ModManifest, "Extra Item Noti. with Amount", "Show Extra Item Notification with Extra Item Amount, otherwise shows only a simple message.", () => Config.ExtraItemNotificationAmountMessage, (bool val) => Config.ExtraItemNotificationAmountMessage = val);
 
                 configMenuApi.RegisterLabel(ModManifest, "Features", "Game changing features");
-                configMenuApi.RegisterSimpleOption(ModManifest, "Enable Overworld Monsters", "Monsters spawn random on the Overworld", () => Config.OverworldMonsters, (bool val) => Config.OverworldMonsters = val);
-                configMenuApi.RegisterSimpleOption(ModManifest, "Enable Crop Grow", "Crops can grow fully or faster by day (randomly, depending on your Farming-Level)", () => Config.CropsGrow, (bool val) => Config.CropsGrow = val);
-                configMenuApi.RegisterSimpleOption(ModManifest, "Enable More XP from Monster", "Killing Monsters with one-hit gives more XP", () => Config.MoreEXPByOneHitKills, (bool val) => Config.MoreEXPByOneHitKills = val);
-                configMenuApi.RegisterSimpleOption(ModManifest, "Enable Drop Extra Items", "Drops More Items/Harvest (randomly, depending on your Skill-Levels)", () => Config.DropExtraItems, (bool val) => Config.DropExtraItems = val);
+                configMenuApi.RegisterSimpleOption(ModManifest, "Enable Crop Grow", "Crops can grow fully or faster by day. (randomly, depending on your Farming-Level)", () => Config.CropsGrow, (bool val) => Config.CropsGrow = val);
+                configMenuApi.RegisterSimpleOption(ModManifest, "Enable More XP from Monster", "Killing Monsters with one-hit gives more XP.", () => Config.MoreEXPByOneHitKills, (bool val) => Config.MoreEXPByOneHitKills = val);
+                configMenuApi.RegisterSimpleOption(ModManifest, "Enable Drop Extra Items", "Drops more Items/Harvest. (randomly, depending on your Skill-Levels)", () => Config.DropExtraItemsByLevel, (bool val) => Config.DropExtraItemsByLevel = val);
+                configMenuApi.RegisterSimpleOption(ModManifest, "Enable Extended Profession", "Drops more Items/Harvest, Crops worth more and other Profession-based increases. (based on your Profession (like Tiller) and extending 10+ Skill-Level Professions)", () => Config.DropExtraItemsByProfession, (bool val) => Config.DropExtraItemsByProfession = val);
+                configMenuApi.RegisterSimpleOption(ModManifest, "Enable More Item Quality", "Adds better Item-Quality when Harvesting. (depending on your Skill-Level, pass Level. 13)", () => Config.BetterItemQuality, (bool val) => Config.BetterItemQuality = val);
+
+                configMenuApi.RegisterSimpleOption(ModManifest, "Enable Fishing Overhaul", "Extending Bobber Bar Height. (depending on your Fishing-Skill-Level)", () => Config.FishingOverhaul, (bool val) => Config.FishingOverhaul = val);
+
+                configMenuApi.RegisterSimpleOption(ModManifest, "Enable Overworld Monsters", "Monsters spawn random on the Overworld.", () => Config.OverworldMonsters, (bool val) => Config.OverworldMonsters = val);
+
             }
             LEModHandler.Initialise(this.Monitor);
             GameLocationPatch.Initialize(levelExtender);
             FarmerPatch.Initialize(levelExtender);
+            ObjectSellToStorePricePatch.Initialize(levelExtender);
 
             // register commands
             if (Config.TestingMode)
@@ -105,14 +102,14 @@ namespace LevelExtender
 
         public void Edit<T>(IAssetData asset)
         {
-            /// TODO (find) util lib for data edit ...
+            /// TODO (find) util for data edit ...
             IDictionary<int, string> data = asset.AsDictionary<int, string>().Data;
             foreach (var pair in data.ToArray())
             {
                 string[] fields = pair.Value.Split('/');
                 if (int.TryParse(fields[1], out int val))
                 {
-                    int chanceToDart = Math.Max(val - rand.Next(0, Game1.player.fishingLevel.Value / 4), val / 2);
+                    int chanceToDart = Math.Max(val - Game1.random.Next(0, Game1.player.fishingLevel.Value / 4), val / 2);
                     fields[1] = chanceToDart.ToString();
                     data[pair.Key] = string.Join("/", fields);
                 }
@@ -134,7 +131,7 @@ namespace LevelExtender
             {
                 levelExtender.CleanUpMonters();
             }
-            if (Config.OverworldMonsters && !levelExtender.NoMonsters && Game1.player.currentLocation.IsOutdoors && Context.IsPlayerFree && rand.NextDouble() <= levelExtender.MonsterSpawnRate)
+            if (Config.OverworldMonsters && !levelExtender.NoMonsters && Game1.player.currentLocation.IsOutdoors && Context.IsPlayerFree && Game1.random.NextDouble() <= levelExtender.MonsterSpawnRate)
             {
                 levelExtender.SpawnRandomMonster();
             }
@@ -145,7 +142,7 @@ namespace LevelExtender
             if (!Context.IsWorldReady)
                 return;
 
-            if (e.IsMultipleOf(8))
+            if (Config.FishingOverhaul && e.IsMultipleOf(8))
             {
                 levelExtender.UpdateBobberBar();
             }
@@ -156,7 +153,6 @@ namespace LevelExtender
         {
             levelExtender.InitMod();
             Helper.Content.InvalidateCache("Data/Fish");
-            SaveIsLoaded = true;
         }
 
         private void onSaving(object sender, EventArgs e)
@@ -166,7 +162,6 @@ namespace LevelExtender
         private void onReturnedToTitle(object sender, EventArgs e)
         {
             levelExtender.CleanUpMod();
-            SaveIsLoaded = false;
         }
         private void onDayStarted(object sender, EventArgs e)
         {
@@ -181,6 +176,7 @@ namespace LevelExtender
                 levelExtender.RandomCropGrows();
             }
 
+            levelExtender.ResetXPBar();
             levelExtender.CleanUpLastMessage();
         }
 
@@ -199,7 +195,5 @@ namespace LevelExtender
         }
 
         private LevelExtender levelExtender;
-
-        private static readonly Random rand = new Random(Guid.NewGuid().GetHashCode());
     }
 }

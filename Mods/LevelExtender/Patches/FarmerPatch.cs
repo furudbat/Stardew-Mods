@@ -1,15 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Harmony;
 using LevelExtender.Common;
-using LevelExtender.Logging;
-using Microsoft.Xna.Framework;
 using StardewValley;
 
 namespace LevelExtender.Patches
 {
+    [HarmonyPatch(typeof(Farmer))]
+    [HarmonyPatch(nameof(Farmer.addItemToInventoryBool))]
+    [HarmonyPatch(new Type[] { typeof(Item), typeof(bool) })]
     class FarmerPatch
     {
         private static ILevelExtender mod;
@@ -20,7 +18,7 @@ namespace LevelExtender.Patches
             FarmerPatch.mod = mod;
         }
 
-        public static bool addItemToInventoryBool_Prefix(Item item, bool makeActiveObject)
+        public static bool Prefix(Item item, bool makeActiveObject, ref bool __result)
         {
             try
             {
@@ -28,9 +26,9 @@ namespace LevelExtender.Patches
             }
             catch (Exception ex)
             {
-                mod.Logger.LogError($"Failed in {nameof(addItemToInventoryBool_Prefix)}:\n{ex}");
-                return true; // run original logic
+                mod.Logger.LogError($"Failed in {nameof(Prefix)}:\n{ex}");
             }
+            return true;
         }
     }
 }

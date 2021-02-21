@@ -67,6 +67,12 @@
     <Compile Include="Commands\LegacySetLevelCommand.cs" />
     <Compile Include="Commands\LegacyShowXPTableCommand.cs" />
     <Compile Include="Common\LESkill.cs" />
+    <Compile Include="Framework\ItemBonus\FishingItemBonuses.cs" />
+    <Compile Include="Framework\ItemBonus\ForagingItemBonuses.cs" />
+    <Compile Include="Framework\ItemBonus\MiningItemBonuses.cs" />
+    <Compile Include="Framework\ItemBonus\ItemBonuses.cs" />
+    <Compile Include="Framework\ItemBonus\ItemBonusFromSkill.cs" />
+    <Compile Include="Framework\ItemBonus\FarmingItemBonuses.cs" />
     <Compile Include="Framework\SkillsList.cs" />
     <Compile Include="I18n.cs">
       <AutoGen>True</AutoGen>
@@ -86,6 +92,7 @@
     <Compile Include="ModEntry.cs" />
     <Compile Include="LEAPI\ISkillMod.cs" />
     <Compile Include="Framework\Mods\LEModHandler.cs" />
+    <Compile Include="Patches\ObjectSellToStorePricePatch.cs" />
     <Compile Include="Patches\FarmerPatch.cs" />
     <Compile Include="Patches\GameLocationPatch.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -132,6 +139,7 @@
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Pathoschild.Stardew.ModBuildConfig.3.1.0\build\Pathoschild.Stardew.ModBuildConfig.targets" Condition="Exists('..\packages\Pathoschild.Stardew.ModBuildConfig.3.1.0\build\Pathoschild.Stardew.ModBuildConfig.targets')" />
 </Project>

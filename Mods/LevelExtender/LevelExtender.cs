@@ -4,6 +4,7 @@ using System.Linq;
 using System.Timers;
 using LevelExtender.Common;
 using LevelExtender.Framework;
+using LevelExtender.Framework.ItemBonus;
 using LevelExtender.Framework.SkillTypes;
 using LevelExtender.LEAPI;
 using LevelExtender.Logging;
@@ -32,6 +33,7 @@ namespace LevelExtender
 
         private static readonly int MAX_DOUBLE_ITEM_DROPS = 100;
         private static readonly List<int> REQUIRED_XP_TABLE = new List<int> { 100, 380, 770, 1300, 2150, 3300, 4800, 6900, 10000, 15000 };
+        private static readonly int BOBBER_BASEBAR_SIZE = 82;
 
         public LevelExtender(ModConfig config, IModHelper helper, IMonitor logMonitor)
         {
@@ -41,10 +43,7 @@ namespace LevelExtender
             Skills = new List<LESkill>();
             Monsters = new List<Monster>();
             MonstersSpawnRate = -1;
-
-            XPBar = new ExtendedExperienceBar(this.helper, this);
-            XPBar.ToggleShowExperienceBar(config.DrawXPBars);
-            XPBar.ToggleShowExperienceGain(config.DrawXPGain);
+            ResetXPBar();
         }
 
         public void RegisterMod(ISkillMod mod, IMonitor logMonitor)
@@ -155,11 +154,19 @@ namespace LevelExtender
         public void InitMod()
         {
             InitSkills();
+            ResetXPBar();
+        }
+        public void ResetXPBar()
+        {
+            XPBar = new ExtendedExperienceBar(this.helper, this);
+            XPBar.ToggleShowExperienceBar(Config.DrawXPBars);
+            XPBar.ToggleShowExperienceGain(Config.DrawXPGain);
         }
         private void InitSkills()
         {
-            Skills.Clear();
             extraItemCategories.Clear();
+            Skills.Clear();
+            /// @TODO: add SpaceCore skills (?)
             foreach (var skill in SkillsList.AllSkills)
             {
                 LESkill leSkill = new LESkill(skill, LEEvents, 1.0, new List<int>(REQUIRED_XP_TABLE));
@@ -258,8 +265,11 @@ namespace LevelExtender
             {
                 location = Game1.player.currentLocation.getRandomTile();
             }
+            if (!Game1.player.currentLocation.isTileLocationTotallyClearAndPlaceable(location)) {
+                return;
+            }
 
-            int tier = rand.Next(0, 9);
+            int tier = Game1.random.Next(0, 9);
             Monster monster = GenerateMonster(tier, GetMonster(tier, location * (float)Game1.tileSize));
 
             var characters = Game1.currentLocation.characters;
@@ -278,7 +288,10 @@ namespace LevelExtender
         {
             get
             {
-                if (Game1.player.combatLevel.Value == 0)
+                var skill = Skills.FirstOrDefault(s => s.Type == DefaultSkillTypes.Combat);
+                var combatLevel = (skill != null) ? skill.Level : Game1.player.CombatLevel;
+
+                if (combatLevel == 0)
                 {
                     return 0.0;
                 }
@@ -294,15 +307,18 @@ namespace LevelExtender
 
                 if (Game1.isDarkOut() || Game1.isRaining)
                 {
-                    return (0.01 + (Game1.player.combatLevel.Value * 0.0001)) * 1.5;
+                    return (0.01 + (combatLevel * 0.0001)) * 1.5;
                 }
 
-                return (0.01 + (Game1.player.combatLevel.Value * 0.0001));
+                return (0.01 + (combatLevel * 0.0001));
             }
         }
 
         public void UpdateBobberBar()
         {
+            var skill = Skills.FirstOrDefault(s => s.Type == DefaultSkillTypes.Fishing);
+            var fishingLevel = (skill != null) ? skill.Level : Game1.player.FishingLevel;
+
             if (Game1.activeClickableMenu is BobberBar && !firstFade)
             {
                 int bobberBonus = 0;
@@ -315,35 +331,35 @@ namespace LevelExtender
                     bobberBonus = 24;
                 }
 
-                if (Game1.player.FishingLevel > 99)
+                if (fishingLevel > 99)
                     bobberBonus += 8;
-                else if (Game1.player.FishingLevel > 74)
+                else if (fishingLevel > 74)
                     bobberBonus += 6;
-                else if (Game1.player.FishingLevel > 49)
+                else if (fishingLevel > 49)
                     bobberBonus += 4;
-                else if (Game1.player.FishingLevel > 24)
+                else if (fishingLevel > 24)
                     bobberBonus += 2;
 
-                int bobberBarSize = 80;
+                int bobberBarSize = BOBBER_BASEBAR_SIZE;
                 if (!(helper.ModRegistry.IsLoaded("DevinLematty.ExtremeFishingOverhaul")))
                 {
                     if (isBeginnersRod)
-                        bobberBarSize = 80 + (5 * 9);
-                    else if (Game1.player.FishingLevel < 11)
-                        bobberBarSize = 80 + bobberBonus + (int)(Game1.player.FishingLevel * 9);
+                        bobberBarSize = BOBBER_BASEBAR_SIZE + (5 * 9);
+                    else if (fishingLevel < 11)
+                        bobberBarSize = BOBBER_BASEBAR_SIZE + bobberBonus + (int)(fishingLevel * 9);
                     else
-                        bobberBarSize = 165 + bobberBonus + (int)(Game1.player.FishingLevel * (0.5 + (rand.NextDouble() / 2.0)));
+                        bobberBarSize = (2*BOBBER_BASEBAR_SIZE + 5) + bobberBonus + (int)(fishingLevel * 0.5);
                 }
                 else
                 {
                     if (isBeginnersRod)
-                        bobberBarSize = 80 + (5 * 7);
-                    else if (Game1.player.FishingLevel < 11)
-                        bobberBarSize = 80 + bobberBonus + (int)(Game1.player.FishingLevel * 7);
-                    else if (Game1.player.FishingLevel > 10 && Game1.player.FishingLevel < 20)
-                        bobberBarSize = 150 + bobberBonus + (int)(Game1.player.FishingLevel);
+                        bobberBarSize = BOBBER_BASEBAR_SIZE + (5 * 7);
+                    else if (fishingLevel < 11)
+                        bobberBarSize = BOBBER_BASEBAR_SIZE + bobberBonus + (int)(fishingLevel * 7);
+                    else if (fishingLevel > 10 && fishingLevel < 20)
+                        bobberBarSize = BOBBER_BASEBAR_SIZE + (3*BOBBER_BASEBAR_SIZE/4) + bobberBonus + (int)(fishingLevel);
                     else
-                        bobberBarSize = 170 + bobberBonus + (int)(Game1.player.FishingLevel * 0.8 * (0.5 + (rand.NextDouble() / 2.0)));
+                        bobberBarSize = (2*BOBBER_BASEBAR_SIZE) + bobberBonus + (int)(fishingLevel * 0.8);
                 }
 
                 firstFade = true;
@@ -360,12 +376,13 @@ namespace LevelExtender
                 if (!bobberInBar)
                 {
                     float dist = helper.Reflection.GetField<float>(Game1.activeClickableMenu, "distanceFromCatching").GetValue();
-                    helper.Reflection.GetField<float>(Game1.activeClickableMenu, "distanceFromCatching").SetValue(dist + ((float)(Game1.player.FishingLevel - 10) / 22000.0f));
+                    helper.Reflection.GetField<float>(Game1.activeClickableMenu, "distanceFromCatching").SetValue(dist + ((float)(fishingLevel - 10) / 22000.0f));
                 }
             }
         }
 
         public bool damageMonster_Prefix(
+          GameLocation currentLocation,
           Rectangle areaOfEffect,
           int minDamage,
           int maxDamage,
@@ -378,10 +395,9 @@ namespace LevelExtender
           Farmer who)
         {
             var ret = true;
-
             if (Config.MoreEXPByOneHitKills)
             {
-                ret = OneHitKillsMoreXP(areaOfEffect, minDamage, maxDamage, isBomb, knockBackModifier, addedPrecision, critChance, critMultiplier, triggerMonsterInvincibleTimer, who) && ret;
+                ret = OneHitKillsMoreXP(currentLocation, areaOfEffect, minDamage, maxDamage, isBomb, knockBackModifier, addedPrecision, critChance, critMultiplier, triggerMonsterInvincibleTimer, who) && ret;
             }
 
             // add more "damageMonster"-Handler here
@@ -390,6 +406,7 @@ namespace LevelExtender
         }
 
         private bool OneHitKillsMoreXP(
+          GameLocation currentLocation,
           Rectangle areaOfEffect,
           int minDamage,
           int maxDamage,
@@ -401,8 +418,6 @@ namespace LevelExtender
           bool triggerMonsterInvincibleTimer,
           Farmer who)
         {
-            GameLocation currentLocation = Game1.currentLocation;
-
             /// monster can spawn on farm
             //if (!currentLocation.IsFarm)
             //    return true;
@@ -483,16 +498,35 @@ namespace LevelExtender
         {
             var ret = true;
 
-            if (Config.DropExtraItems)
+            if (Config.DropExtraItemsByLevel)
             {
                 ret = DropExtraItems(item) && ret;
+            }
+            if (Config.DropExtraItemsByProfession)
+            {
+                if (item is StardewValley.Object)
+                {
+                    StardewValley.Object obj = (StardewValley.Object)item;
+                    ret = ItemsMoreDrops(obj) && ret;
+                }
             }
 
             // add more "addItemToInventoryBool"-Handler here
 
             return ret;
         }
+        private bool ItemsMoreDrops(StardewValley.Object obj)
+        {
+            if (obj == null || obj.HasBeenInInventory)
+                return true;
 
+            FarmingItemBonuses.ApplyMoreDrops(Skills, obj);
+            MiningItemBonuses.ApplyMoreDrops(Skills, obj);
+            ForagingItemBonuses.ApplyMoreDrops(Skills, obj);
+            FishingItemBonuses.ApplyMoreDrops(Skills, obj);
+
+            return true;
+        }
         private bool DropExtraItems(Item item)
         {
             if (item == null || item.HasBeenInInventory)
@@ -503,7 +537,7 @@ namespace LevelExtender
 
             //Logger.LogDebug($"DropExtraItems: {item.DisplayName} {item_category} {itemCategories}");
 
-            int original_item_stack = item.Stack;
+            int originalItemStack = item.Stack;
             foreach (var cat_entry in extraItemCategories)
             {
                 if (message.Length > 0)
@@ -519,29 +553,39 @@ namespace LevelExtender
                         item.Stack += 1;
                     }
 
-                    string skillName = skillType.Name;
-                    if (extraItemCategorySkillNames.ContainsKey(itemCategory)) {
-                        skillName = extraItemCategorySkillNames[itemCategory];
-                    }
-
-                    if (Config.DrawExtraItemNotifications)
-                    {
-                        if (Config.ExtraItemNotificationAmountMessage)
-                            message = I18n.ExtraItemMessageWithAmount(skillName: skillName, extraItemAmount: item.Stack - original_item_stack, itemName: item.DisplayName);
-                        else
-                            message = I18n.ExtraItemMessage(skillName: skillName, itemName: item.DisplayName);
-                    }
+                    message = showExtraItemDropMessage(skillType, originalItemStack, item);
                 }
+            }
 
-                if (message.Length > 0)
-                {
-                    Logger.LogDebug($"'{message}'");
-                }
+            return true;
+        }
+
+        private string showExtraItemDropMessage(SkillType skillType, int originalItemStack, Item item)
+        {
+            int itemCategory = item.Category;
+            string skillName = skillType.Name;
+            if (extraItemCategorySkillNames.ContainsKey(itemCategory))
+            {
+                skillName = extraItemCategorySkillNames[itemCategory];
+            }
+
+            var message = "";
+            if (Config.DrawExtraItemNotifications)
+            {
+                if (Config.ExtraItemNotificationAmountMessage)
+                    message = I18n.ExtraItemMessageWithAmount(skillName: skillName, extraItemAmount: item.Stack - originalItemStack, itemName: item.DisplayName);
+                else
+                    message = I18n.ExtraItemMessage(skillName: skillName, itemName: item.DisplayName);
+            }
+
+            if (message.Length > 0)
+            {
+                Logger.LogDebug($"'{message}'");
             }
 
             if (message.Length > 0 && item.salePrice() >= Config.MinItemPriceForNotifications && message != lastMessage)
             {
-                const float HUB_MESSAGE_TIME_LEFT = 2500;
+                const float HUB_MESSAGE_TIME_LEFT = 1000;
                 var messageColor = Color.DeepSkyBlue;
 
                 if (Config.DrawNotificationsAsHUDMessage)
@@ -553,7 +597,26 @@ namespace LevelExtender
                 SetTimerCooldownLastMessage(HUB_MESSAGE_TIME_LEFT * 4);
             }
 
-            return true;
+            return message;
+        }
+        public void sellToStorePrice_Postfix(StardewValley.Object item, long specificPlayerID, ref int newprice)
+        {
+            if (Config.BetterItemQuality || Config.DropExtraItemsByProfession)
+            {
+                ItemsWorthMore(item, specificPlayerID, ref newprice);
+            }
+
+            // add more "sellToStorePrice"-Handler here
+        }
+        private void ItemsWorthMore(StardewValley.Object obj, long specificPlayerID, ref int newprice)
+        {
+            if (obj == null)
+                return;
+
+            FarmingItemBonuses.ApplyWorthMore(Skills, obj, specificPlayerID, ref newprice);
+            MiningItemBonuses.ApplyWorthMore(Skills, obj, specificPlayerID, ref newprice);
+            ForagingItemBonuses.ApplyWorthMore(Skills, obj, specificPlayerID, ref newprice);
+            FishingItemBonuses.ApplyWorthMore(Skills, obj, specificPlayerID, ref newprice);
         }
 
         public void RemoveMonsters()
@@ -568,20 +631,23 @@ namespace LevelExtender
         }
         public void RandomCropGrows()
         {
+            var skill = Skills.FirstOrDefault(s => s.Type == DefaultSkillTypes.Farming);
+            var farmingLevel = (skill != null) ? skill.Level : Game1.player.FarmingLevel;
+
             Farm farm = Game1.getFarm();
-            double growCompletelyChance = Game1.player.FarmingLevel * 0.0002;
-            double addCropPhaseChance = Game1.player.FarmingLevel * 0.001;
+            double growCompletelyChance = farmingLevel * 0.0002;
+            double addCropPhaseChance = farmingLevel * 0.001;
 
             foreach (var key in farm.terrainFeatures.Keys)
             {
                 var terrainFeatureHoeDirt = (farm.terrainFeatures[key] is HoeDirt) ? (HoeDirt)farm.terrainFeatures[key] : null;
-                if (terrainFeatureHoeDirt != null && terrainFeatureHoeDirt.crop != null && rand.NextDouble() < growCompletelyChance)
+                if (terrainFeatureHoeDirt != null && terrainFeatureHoeDirt.crop != null && Game1.random.NextDouble() < growCompletelyChance)
                 {
                     terrainFeatureHoeDirt.crop.growCompletely();
 
                     Logger.LogDebug($"randomCropGrows: growCompletely, {terrainFeatureHoeDirt.crop}");
                 }
-                else if (terrainFeatureHoeDirt != null && terrainFeatureHoeDirt.crop != null && rand.NextDouble() < addCropPhaseChance)
+                else if (terrainFeatureHoeDirt != null && terrainFeatureHoeDirt.crop != null && Game1.random.NextDouble() < addCropPhaseChance)
                 {
                     terrainFeatureHoeDirt.crop.currentPhase.Value = Math.Min(terrainFeatureHoeDirt.crop.currentPhase.Value + 1, terrainFeatureHoeDirt.crop.phaseDays.Count - 1);
 
@@ -594,38 +660,41 @@ namespace LevelExtender
         {
             double drate = (skillType == DefaultSkillTypes.Farming || skillType == DefaultSkillTypes.Foraging) ? 0.002 / 2.0 : 0.002;
             var skill = Skills.FirstOrDefault(s => s.Skill.Type == skillType);
-            return skill != null && rand.NextDouble() <= (skill.Level * drate);
+            return skill != null && Game1.random.NextDouble() <= (skill.Level * drate);
         }
 
-        private static Monster GenerateMonster(int tier, Monster monster)
+        private Monster GenerateMonster(int tier, Monster monster)
         {
+            var skill = Skills.FirstOrDefault(s => s.Type == DefaultSkillTypes.Combat);
+            var combatLevel = (skill != null) ? skill.Level : Game1.player.CombatLevel;
+
             if (tier == 8)
             {
                 tier = 5;
                 monster.resilience.Value += 20;
-                monster.Slipperiness += rand.Next(10) + 5;
-                monster.coinsToDrop.Value = rand.Next(10) * 50;
-                monster.startGlowing(new Color(rand.Next(0, 255), rand.Next(0, 255), rand.Next(0, 255)), true, 1.0f);
-                monster.Health *= 1 + (rand.Next(Game1.player.CombatLevel / 2, Game1.player.CombatLevel));
+                monster.Slipperiness += Game1.random.Next(10) + 5;
+                monster.coinsToDrop.Value = Game1.random.Next(10) * 50;
+                monster.startGlowing(new Color(Game1.random.Next(0, 255), Game1.random.Next(0, 255), Game1.random.Next(0, 255)), true, 1.0f);
+                monster.Health *= 1 + (Game1.random.Next(combatLevel / 2, combatLevel));
 
                 var data = Game1.content.Load<Dictionary<int, string>>("Data\\ObjectInformation");
 
-                monster.objectsToDrop.Add(rand.Next(data.Count));
+                monster.objectsToDrop.Add(Game1.random.Next(data.Count));
                 monster.displayName += " (BOSS)";
-                monster.Scale = monster.Scale * (float)(1 + (rand.NextDouble() * Game1.player.CombatLevel / 25.0));
+                monster.Scale = monster.Scale * (float)(1 + (Game1.random.NextDouble() * combatLevel / 25.0));
             }
             else
             {
                 tier = 1;
             }
 
-            monster.DamageToFarmer = (int)(monster.DamageToFarmer / 1.5) + (int)(Game1.player.combatLevel.Value / 3);
-            monster.Health *= 1 + (Game1.player.CombatLevel / 4);
+            monster.DamageToFarmer = (int)(monster.DamageToFarmer / 1.5) + (int)(combatLevel / 3);
+            monster.Health *= 1 + (combatLevel / 4);
             monster.focusedOnFarmers = true;
             monster.wildernessFarmMonster = true;
-            monster.Speed += rand.Next((int)Math.Round((Game1.player.combatLevel.Value / 10.0)));
-            monster.resilience.Set(monster.resilience.Value + (Game1.player.combatLevel.Value / 10));
-            monster.ExperienceGained += (int)(monster.Health / 100.0) + ((10 + (Game1.player.combatLevel.Value * 2)) * tier);
+            monster.Speed += Game1.random.Next((int)Math.Round((combatLevel / 10.0)));
+            monster.resilience.Set(monster.resilience.Value + (combatLevel / 10));
+            monster.ExperienceGained += (int)(monster.Health / 100.0) + ((10 + (combatLevel * 2)) * tier);
 
             return monster;
         }
@@ -650,7 +719,7 @@ namespace LevelExtender
                 case 7:
                     return new ShadowBrute(position);
                 case 8:
-                    int subTier = rand.Next(1, 6);
+                    int subTier = Game1.random.Next(1, 6);
                     if (subTier == 1)
                         return new RockCrab(position, "Iridium Crab");
                     else if (subTier == 2)
@@ -675,8 +744,6 @@ namespace LevelExtender
             cooldownLastMessage.AutoReset = false;
             cooldownLastMessage.Enabled = true;
         }
-
-        private static Random rand = new Random(Guid.NewGuid().GetHashCode());
 
         private IModHelper helper;
         private LEEvents LEEvents = new LEEvents();

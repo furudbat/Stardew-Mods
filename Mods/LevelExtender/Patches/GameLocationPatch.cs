@@ -1,15 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Harmony;
 using LevelExtender.Common;
-using LevelExtender.Logging;
 using Microsoft.Xna.Framework;
 using StardewValley;
 
 namespace LevelExtender.Patches
 {
+    [HarmonyPatch(typeof(GameLocation))]
+    [HarmonyPatch(nameof(GameLocation.damageMonster))]
+    [HarmonyPatch(new Type[] { typeof(Rectangle), typeof(int), typeof(int), typeof(bool), typeof(float), typeof(int), typeof(float), typeof(float), typeof(bool), typeof(Farmer) })]
     class GameLocationPatch
     {
         private static ILevelExtender mod;
@@ -20,7 +19,8 @@ namespace LevelExtender.Patches
             GameLocationPatch.mod = mod;
         }
 
-        public static bool damageMonster_Prefix(
+        public static bool Prefix(
+          GameLocation __instance,
           Rectangle areaOfEffect,
           int minDamage,
           int maxDamage,
@@ -30,17 +30,19 @@ namespace LevelExtender.Patches
           float critChance,
           float critMultiplier,
           bool triggerMonsterInvincibleTimer,
-          Farmer who)
+          Farmer who,
+          ref bool __result
+          )
         {
             try
             {
-                return mod.damageMonster_Prefix(areaOfEffect, minDamage, maxDamage, isBomb, knockBackModifier, addedPrecision, critChance, critMultiplier, triggerMonsterInvincibleTimer, who);
+                return mod.damageMonster_Prefix(__instance, areaOfEffect, minDamage, maxDamage, isBomb, knockBackModifier, addedPrecision, critChance, critMultiplier, triggerMonsterInvincibleTimer, who);
             }
             catch (Exception ex)
             {
-                mod.Logger.LogError($"Failed in {nameof(damageMonster_Prefix)}:\n{ex}");
-                return true; // run original logic
+                mod.Logger.LogError($"Failed in {nameof(Prefix)}:\n{ex}");
             }
+            return true;
         }
     }
 }

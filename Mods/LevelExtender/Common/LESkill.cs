@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using LevelExtender.LEAPI;
 using LevelExtender.Logging;
+using StardewValley;
 
 namespace LevelExtender.Common
 {

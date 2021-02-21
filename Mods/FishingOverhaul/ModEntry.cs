@@ -13,8 +13,6 @@ using StardewValley;
 using TehPers.FishingOverhaul.Api.Enums;
 using System.IO;
 using Harmony;
-using SObject = StardewValley.Object;
-using SpaceShared.APIs;
 
 namespace ExtremeFishingOverhaul
 {

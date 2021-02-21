@@ -17,35 +17,35 @@ namespace LevelExtender.Framework
                 Type = DefaultSkillTypes.Farming,
                 SetSkillLevel = level => Game1.player.FarmingLevel = level,
                 GetSkillLevel = () => Game1.player.FarmingLevel,
-                ExtraItemCategories = () => new List<int> { -16, -74, -75, -79, -80, -81 }
+                ExtraItemCategories = () => new List<int> { Object.SeedsCategory, Object.VegetableCategory, Object.FruitsCategory, Object.flowersCategory }
             },
             new Skill
             {
                 Type = DefaultSkillTypes.Fishing,
                 SetSkillLevel = level => Game1.player.FishingLevel = level,
                 GetSkillLevel = () => Game1.player.FishingLevel,
-                ExtraItemCategories = () => new List<int> { -4 }
+                ExtraItemCategories = () => new List<int> { Object.FishCategory }
             },
             new Skill
             {
                 Type = DefaultSkillTypes.Foraging,
                 SetSkillLevel = level => Game1.player.ForagingLevel = level,
                 GetSkillLevel = () => Game1.player.ForagingLevel,
-                ExtraItemCategories = () => new List<int> { -16, -74, -75, -79, -80, -81 }
+                ExtraItemCategories = () => new List<int> { Object.buildingResources, Object.SeedsCategory, Object.FruitsCategory, Object.flowersCategory, Object.GreensCategory }
             },
             new Skill
             {
                 Type = DefaultSkillTypes.Mining,
                 SetSkillLevel = level => Game1.player.MiningLevel = level,
                 GetSkillLevel = () => Game1.player.MiningLevel,
-                ExtraItemCategories = () => new List<int> { -2, -12, -15 }
+                ExtraItemCategories = () => new List<int> { Object.GemCategory, Object.mineralsCategory, Object.metalResources }
             },
             new Skill
             {
                 Type = DefaultSkillTypes.Combat,
                 SetSkillLevel = level => Game1.player.CombatLevel = level,
                 GetSkillLevel = () => Game1.player.CombatLevel,
-                ExtraItemCategories = () => new List<int> { -28, -29, -95, -96, -98 }
+                ExtraItemCategories = () => new List<int> { Object.monsterLootCategory, Object.equipmentCategory, Object.hatCategory, Object.ringCategory, Object.weaponCategory }
             }
         };
 

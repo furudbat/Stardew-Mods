@@ -18,6 +18,7 @@ namespace LevelExtender.Common
         ModConfig EditConfig(Action<ModConfig> func);
 
         bool damageMonster_Prefix(
+          GameLocation currentLocation,
           Rectangle areaOfEffect,
           int minDamage,
           int maxDamage,
@@ -28,7 +29,7 @@ namespace LevelExtender.Common
           float critMultiplier,
           bool triggerMonsterInvincibleTimer,
           Farmer who);
-
         bool addItemToInventoryBool_Prefix(Item item, bool makeActiveObject);
+        void sellToStorePrice_Postfix(StardewValley.Object item, long specificPlayerID, ref int newprice);
     }
 }

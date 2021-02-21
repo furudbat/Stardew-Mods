@@ -8,6 +8,9 @@ using StardewValley;
 
 namespace LevelExtender.UIElements
 {
+    /// <summary>
+    /// ExperiencePointDisplay from Ui-Info-Suite by Cdaragorn - https://github.com/cdaragorn/Ui-Info-Suite
+    /// </summary>
     class ExperiencePointDisplay
     {
         private int _alpha = 100;

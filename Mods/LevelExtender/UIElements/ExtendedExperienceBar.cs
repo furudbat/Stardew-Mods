@@ -16,7 +16,9 @@ using System.Timers;
 
 namespace LevelExtender.UIElements
 {
-    // ExperienceBar from Ui-Info-Suite by Cdaragorn - https://github.com/cdaragorn/Ui-Info-Suite
+    /// <summary>
+    /// ExperienceBar from Ui-Info-Suite by Cdaragorn - https://github.com/cdaragorn/Ui-Info-Suite
+    /// </summary>
     class ExtendedExperienceBar : IDisposable
     {
         private const int MaxBarWidth = 180;
@@ -129,6 +131,9 @@ namespace LevelExtender.UIElements
         /// <param name="e">The event arguments.</param>
         private void PlayerOnWarped(object sender, WarpedEventArgs e)
         {
+            if (!Context.IsWorldReady)
+                return;
+
             if (e.IsLocalPlayer)
                 _XPDisplays.Clear();
         }
@@ -225,6 +230,9 @@ namespace LevelExtender.UIElements
         /// <param name="e">The event arguments.</param>
         private void OnPlayerLevelChanged(object sender, LevelChangedEventArgs e)
         {
+            if (!Context.IsWorldReady)
+                return;
+
             ModEntry.Logger.LogDebug($"ExtendedExperienceBar.OnLevelChanged: {e.Skill} {e.OldLevel} -> {e.NewLevel}");
 
             if (_showLevelUpAnimation && e.IsLocalPlayer)
@@ -263,6 +271,9 @@ namespace LevelExtender.UIElements
         /// <param name="e">The event arguments.</param>
         private void OnDisplayRenderingHud(object sender, RenderingHudEventArgs e)
         {
+            if (!Context.IsWorldReady)
+                return;
+
             if (!Game1.eventUp)
             {
                 if (_shouldDrawLevelUp)
@@ -476,7 +487,7 @@ namespace LevelExtender.UIElements
                 Game1.spriteBatch.Draw(
                     Game1.mouseCursors,
                     new Vector2(
-                        leftSide + ((currentLevel >= 100) ? 92 : (currentLevel >= 10) ? 76 : 54),
+                        leftSide + ((currentLevel >= 100) ? 96 : (currentLevel >= 10) ? 76 : 54),
                         Game1.graphics.GraphicsDevice.Viewport.TitleSafeArea.Bottom - 62),
                     _experienceIconPosition,
                     _iconColor,

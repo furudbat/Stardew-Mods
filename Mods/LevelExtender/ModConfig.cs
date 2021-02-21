@@ -27,9 +27,12 @@ namespace LevelExtender
 
         public bool CropsGrow { get; set; } = true;
         public bool MoreEXPByOneHitKills { get; set; } = true;
-        public bool DropExtraItems { get; set; } = true;
+        public bool DropExtraItemsByLevel { get; set; } = true;
+        public bool DropExtraItemsByProfession { get; set; } = true;
 
         public bool OverworldMonsters { get; set; } = false;
         public double OverworldMonstersSpawnRate { get; set; } = -1;
+        public bool FishingOverhaul { get; set; } = true;
+        public bool BetterItemQuality { get; set; } = true;
     }
 }
