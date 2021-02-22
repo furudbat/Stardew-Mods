@@ -31,7 +31,7 @@ namespace LevelExtender.Framework
                 Type = DefaultSkillTypes.Foraging,
                 SetSkillLevel = level => Game1.player.ForagingLevel = level,
                 GetSkillLevel = () => Game1.player.ForagingLevel,
-                ExtraItemCategories = () => new List<int> { Object.buildingResources, Object.SeedsCategory, Object.FruitsCategory, Object.flowersCategory, Object.GreensCategory }
+                ExtraItemCategories = () => new List<int> { Object.buildingResources, Object.GreensCategory }
             },
             new Skill
             {

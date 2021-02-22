@@ -12,7 +12,7 @@ namespace LevelExtender.Framework.ItemBonus
     {
         public GathererItemBonus()
         {
-            skillType = SkillTypes.DefaultSkillTypes.Foraging;
+            SkillType = SkillTypes.DefaultSkillTypes.Foraging;
             ItemBonusType = ItemBonusType.GathererMoreForage;
             ItemCategories = DefaultItemCategories.Foraging;
         }
@@ -21,7 +21,7 @@ namespace LevelExtender.Framework.ItemBonus
     {
         public ForesterTapperItemBonus()
         {
-            skillType = SkillTypes.DefaultSkillTypes.Foraging;
+            SkillType = SkillTypes.DefaultSkillTypes.Foraging;
             ItemBonusType = ItemBonusType.ForesterTapperSyrupWorthMore;
             ItemCategories = DefaultItemCategories.Syrup;
         }

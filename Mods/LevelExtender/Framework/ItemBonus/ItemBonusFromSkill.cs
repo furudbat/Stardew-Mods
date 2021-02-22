@@ -61,6 +61,7 @@ namespace LevelExtender.Framework.ItemBonus
         public static readonly List<string> Ores = new List<string> { "Copper Ore", "Gold Ore", "Iridium Ore", "Iron Ore" };
         public static readonly List<string> Bars = new List<string> { "Copper Bar", "Gold Bar", "Iridium Bar", "Iron Bar" };
         public static readonly List<string> Geodes = new List<string> { "Geode", "Frozen Geode", "Magma Geode", "Omni Geode" };
+        public static readonly List<string> ExtraCrops = new List<string> { "Coffee Bean" };
     }
 
     class ItemBonusFromSkillValue
@@ -70,7 +71,7 @@ namespace LevelExtender.Framework.ItemBonus
     }
     internal class ItemBonusFromSkill
     {
-        public SkillType skillType { get; set; }
+        public SkillType SkillType { get; set; }
         public ItemBonusType ItemBonusType { get; set; } = ItemBonusType.None;
         public List<int> ItemCategories { get; set; } = DefaultItemCategories.Any;
         public List<string> Items { get; set; } = DefaultItems.Any;
@@ -114,7 +115,7 @@ namespace LevelExtender.Framework.ItemBonus
 
         public bool ApplyMoreDrops(IEnumerable<LESkill> skills, StardewValley.Object item)
         {
-            var skill = skills.FirstOrDefault(s => s.Type == skillType);
+            var skill = skills.FirstOrDefault(s => s.Type == SkillType);
             var skillLevel = (skill != null) ? skill.Level : -1;
 
             ModEntry.Logger.LogDebug($"ItemBonusFromSkill.ApplyMoreDrops: skill: {skill.Name} {skillLevel}/{MinLevel}; item: {item.Name} ({item.Category}); {ItemBonusType} {Chance}; {ItemCategories.Count}, {Items.Count}");
@@ -122,7 +123,7 @@ namespace LevelExtender.Framework.ItemBonus
             if (skillLevel >= MinLevel && (ItemCategories.Count == 0 || ItemCategories.Contains(item.Category) || ExtraItems.Contains(item.Name)) && (Items.Count == 0 || Items.Contains(item.Name)))
             {
                 ModEntry.Logger.LogDebug($"ItemBonusFromSkill.ApplyMoreDrops: old stk: {item.Stack}");
-                if (Chance >= 1.0 || Game1.random.NextDouble() <= Chance)
+                if (Chance > 0.0 && (Chance >= 1.0 || Game1.random.NextDouble() <= Chance))
                 {
                     switch (ItemBonusType)
                     {
@@ -203,7 +204,7 @@ namespace LevelExtender.Framework.ItemBonus
 
         public bool ApplyWorthMore(IEnumerable<LESkill> skills, StardewValley.Object item, long specificPlayerID, ref int newprice)
         {
-            var skill = skills.FirstOrDefault(s => s.Type == skillType);
+            var skill = skills.FirstOrDefault(s => s.Type == SkillType);
             var skillLevel = (skill != null) ? skill.Level : -1;
 
             //ModEntry.Logger.LogDebug($"ItemBonusFromSkill.ApplyWorthMore: skill: {skill.Name} {skillLevel}/{MinLevel}; item: {item.Name} ({item.Category}); {ItemBonusType} {Chance}; {ItemCategories.Count}, {Items.Count}");
@@ -211,7 +212,7 @@ namespace LevelExtender.Framework.ItemBonus
             if (skillLevel >= MinLevel && (ItemCategories.Count == 0 || ItemCategories.Contains(item.Category) || ExtraItems.Contains(item.Name)) && (Items.Count == 0 || Items.Contains(item.Name)))
             {
                 //ModEntry.Logger.LogDebug($"ItemBonusFromSkill.ApplyWorthMore: old $ {newprice}");
-                if (Chance >= 1.0 || Game1.random.NextDouble() <= Chance)
+                if (Chance > 0.0 && (Chance >= 1.0 || Game1.random.NextDouble() <= Chance))
                 {
                     switch (ItemBonusType)
                     {
@@ -302,6 +303,34 @@ namespace LevelExtender.Framework.ItemBonus
             return false;
         }
 
+        public bool ApplyBetterQuality(IEnumerable<LESkill> skills, StardewValley.Object item)
+        {
+            var skill = skills.FirstOrDefault(s => s.Type == SkillType);
+            var skillLevel = (skill != null) ? skill.Level : -1;
+
+            ModEntry.Logger.LogDebug($"ItemBonusFromSkill.ApplyBetterQuality: skill: {skill.Name} {skillLevel}/{MinLevel}; item: {item.Name} ({item.Category}); {ItemBonusType} {Chance}; {ItemCategories.Count}, {Items.Count}");
+
+            if (skillLevel >= MinLevel && (ItemCategories.Count == 0 || ItemCategories.Contains(item.Category) || ExtraItems.Contains(item.Name)) && (Items.Count == 0 || Items.Contains(item.Name)))
+            {
+                ModEntry.Logger.LogDebug($"ItemBonusFromSkill.ApplyBetterQuality: old Q {item.Quality}");
+                var values = new List<ItemBonusFromSkillValue>(Values);
+                values.Sort((a, b) => b.Value.CompareTo(a.Value));
+                foreach (var value in values)
+                {
+                    if (value.Chance > 0.0 && (value.Chance >= 1.0 || Game1.random.NextDouble() <= value.Chance))
+                    {
+                        switch (ItemBonusType)
+                        {
+                            case ItemBonusType.BetterQuality:
+                                BetterQuality(skillLevel, item, value.Value);
+                                return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
 
         private void TillerCropsWorthMore(int skillLevel, StardewValley.Object item, long specificPlayerID, ref int newprice)
         {
@@ -350,6 +379,10 @@ namespace LevelExtender.Framework.ItemBonus
         private void GeologistMoreGems(int skillLevel, StardewValley.Object item)
         {
             item.Stack += Value;
+        }
+        private void BetterQuality(int skillLevel, StardewValley.Object item, int value)
+        {
+            item.Quality = Math.Max(item.Quality, value);
         }
 
         public static void sellToStorePrice(StardewValley.Object item, long specificPlayerID, ref int newprice, double newpriceFactor)

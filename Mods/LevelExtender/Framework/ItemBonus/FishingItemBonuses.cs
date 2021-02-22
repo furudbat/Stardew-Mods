@@ -12,7 +12,7 @@ namespace LevelExtender.Framework.ItemBonus
     {
         public FisherItemBonus()
         {
-            skillType = SkillTypes.DefaultSkillTypes.Fishing;
+            SkillType = SkillTypes.DefaultSkillTypes.Fishing;
             ItemBonusType = ItemBonusType.FisherFishWorthMore;
             ItemCategories = DefaultItemCategories.Fish;
         }

@@ -64,25 +64,24 @@ namespace LevelExtender
             {
                 configMenuApi.RegisterModConfig(ModManifest, () => Config = new ModConfig(), () => Helper.WriteConfig(Config));
 
+                configMenuApi.RegisterLabel(ModManifest, "Features", "Game changing features");
+                configMenuApi.RegisterSimpleOption(ModManifest, "Random Crop Grow", "Crops can grow fully or faster by day. (randomly, depending on your Farming-Level)", () => Config.CropsGrow, (bool val) => Config.CropsGrow = val);
+                configMenuApi.RegisterSimpleOption(ModManifest, "More XP from Monster", "Killing Monsters with one-hit gives more XP.", () => Config.MoreEXPByOneHitKills, (bool val) => Config.MoreEXPByOneHitKills = val);
+                configMenuApi.RegisterSimpleOption(ModManifest, "Drop Extra Items", "Drops more Items/Harvest. (randomly, depending on your Skill-Levels)", () => Config.DropExtraItemsByLevel, (bool val) => Config.DropExtraItemsByLevel = val);
+                configMenuApi.RegisterSimpleOption(ModManifest, "Extent Profession Affects", "Drops more Items/Harvest, Crops worth more and other Profession-based increases. (based on your Profession (like Tiller) and extending 10+ Skill-Level Professions)", () => Config.DropExtraItemsByProfession, (bool val) => Config.DropExtraItemsByProfession = val);
+                configMenuApi.RegisterSimpleOption(ModManifest, "Better Item Quality", "Adds better Item-Quality when Harvesting. (depending on your Skill-Level, pass Level. 13)", () => Config.BetterItemQuality, (bool val) => Config.BetterItemQuality = val);
+
+                configMenuApi.RegisterSimpleOption(ModManifest, "Fishing Overhaul", "Extending Bobber Bar Height. (depending on your Fishing-Skill-Level)", () => Config.FishingOverhaul, (bool val) => Config.FishingOverhaul = val);
+
+                configMenuApi.RegisterSimpleOption(ModManifest, "Extra Overworld Monsters", "Monsters spawn random on the Overworld.", () => Config.OverworldMonsters, (bool val) => Config.OverworldMonsters = val);
+
                 configMenuApi.RegisterLabel(ModManifest, "Notifications", "Notifications and Display XP Bars");
                 configMenuApi.RegisterSimpleOption(ModManifest, "Show XP Bars", "Enable XP Bar, like in Ui-Info-Suite", () => Config.DrawXPBars, (bool val) => Config.DrawXPBars = val);
                 configMenuApi.RegisterSimpleOption(ModManifest, "Show XP Gain", "Show Gained XP, like in Ui-Info-Suite", () => Config.DrawXPGain, (bool val) => Config.DrawXPGain = val);
                 configMenuApi.RegisterSimpleOption(ModManifest, "Extra Item Noti. Message", "Shows Message when gets Extra Items from Drops, see 'Enable Drop Extra Items'", () => Config.DrawExtraItemNotifications, (bool val) => Config.DrawExtraItemNotifications = val);
-                configMenuApi.RegisterSimpleOption(ModManifest, "Noti. in HUB", "Show Notification in HUB, otherwise in Chat.", () => Config.DrawNotificationsAsHUDMessage, (bool val) => Config.DrawNotificationsAsHUDMessage = val);
+                //configMenuApi.RegisterSimpleOption(ModManifest, "Noti. in HUB", "Show Notification in HUB, otherwise in Chat.", () => Config.DrawNotificationsAsHUDMessage, (bool val) => Config.DrawNotificationsAsHUDMessage = val);
                 configMenuApi.RegisterSimpleOption(ModManifest, "Min. Item Price For Noti.", "Show Extra Item Notifications with minimum Item Price.", () => Config.MinItemPriceForNotifications, (int val) => Config.MinItemPriceForNotifications = val);
                 configMenuApi.RegisterSimpleOption(ModManifest, "Extra Item Noti. with Amount", "Show Extra Item Notification with Extra Item Amount, otherwise shows only a simple message.", () => Config.ExtraItemNotificationAmountMessage, (bool val) => Config.ExtraItemNotificationAmountMessage = val);
-
-                configMenuApi.RegisterLabel(ModManifest, "Features", "Game changing features");
-                configMenuApi.RegisterSimpleOption(ModManifest, "Enable Crop Grow", "Crops can grow fully or faster by day. (randomly, depending on your Farming-Level)", () => Config.CropsGrow, (bool val) => Config.CropsGrow = val);
-                configMenuApi.RegisterSimpleOption(ModManifest, "Enable More XP from Monster", "Killing Monsters with one-hit gives more XP.", () => Config.MoreEXPByOneHitKills, (bool val) => Config.MoreEXPByOneHitKills = val);
-                configMenuApi.RegisterSimpleOption(ModManifest, "Enable Drop Extra Items", "Drops more Items/Harvest. (randomly, depending on your Skill-Levels)", () => Config.DropExtraItemsByLevel, (bool val) => Config.DropExtraItemsByLevel = val);
-                configMenuApi.RegisterSimpleOption(ModManifest, "Enable Extended Profession", "Drops more Items/Harvest, Crops worth more and other Profession-based increases. (based on your Profession (like Tiller) and extending 10+ Skill-Level Professions)", () => Config.DropExtraItemsByProfession, (bool val) => Config.DropExtraItemsByProfession = val);
-                configMenuApi.RegisterSimpleOption(ModManifest, "Enable More Item Quality", "Adds better Item-Quality when Harvesting. (depending on your Skill-Level, pass Level. 13)", () => Config.BetterItemQuality, (bool val) => Config.BetterItemQuality = val);
-
-                configMenuApi.RegisterSimpleOption(ModManifest, "Enable Fishing Overhaul", "Extending Bobber Bar Height. (depending on your Fishing-Skill-Level)", () => Config.FishingOverhaul, (bool val) => Config.FishingOverhaul = val);
-
-                configMenuApi.RegisterSimpleOption(ModManifest, "Enable Overworld Monsters", "Monsters spawn random on the Overworld.", () => Config.OverworldMonsters, (bool val) => Config.OverworldMonsters = val);
-
             }
             LEModHandler.Initialise(this.Monitor);
             GameLocationPatch.Initialize(levelExtender);

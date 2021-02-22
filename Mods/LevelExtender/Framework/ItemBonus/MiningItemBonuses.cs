@@ -12,7 +12,7 @@ namespace LevelExtender.Framework.ItemBonus
     {
         public MinerItemBonus()
         {
-            skillType = SkillTypes.DefaultSkillTypes.Mining;
+            SkillType = SkillTypes.DefaultSkillTypes.Mining;
             ItemBonusType = ItemBonusType.MinerMoreOre;
             ItemCategories = DefaultItemCategories.OresOrBars;
             Items = DefaultItems.Ores;
@@ -22,7 +22,7 @@ namespace LevelExtender.Framework.ItemBonus
     {
         public MinerBlacksmithItemBonus()
         {
-            skillType = SkillTypes.DefaultSkillTypes.Mining;
+            SkillType = SkillTypes.DefaultSkillTypes.Mining;
             ItemBonusType = ItemBonusType.MinerBlacksmithBarsWorthMore;
             ItemCategories = DefaultItemCategories.OresOrBars;
             Items = DefaultItems.Bars;
@@ -32,7 +32,7 @@ namespace LevelExtender.Framework.ItemBonus
     {
         public MinerProspectorItemBonus()
         {
-            skillType = SkillTypes.DefaultSkillTypes.Mining;
+            SkillType = SkillTypes.DefaultSkillTypes.Mining;
             ItemBonusType = ItemBonusType.MinerProspectorMoreCoal;
             ItemCategories = DefaultItemCategories.OresOrBars;
             Items = DefaultItems.Coal;
@@ -42,7 +42,7 @@ namespace LevelExtender.Framework.ItemBonus
     {
         public GeologistItemBonus()
         {
-            skillType = SkillTypes.DefaultSkillTypes.Mining;
+            SkillType = SkillTypes.DefaultSkillTypes.Mining;
             ItemBonusType = ItemBonusType.GeologistMoreGems;
             ItemCategories = DefaultItemCategories.Gems;
             Items = DefaultItems.Any;
@@ -52,7 +52,7 @@ namespace LevelExtender.Framework.ItemBonus
     {
         public GeologistExcavatorItemBonus()
         {
-            skillType = SkillTypes.DefaultSkillTypes.Mining;
+            SkillType = SkillTypes.DefaultSkillTypes.Mining;
             ItemBonusType = ItemBonusType.GeologistExcavatorMoreGeodes;
             ItemCategories = DefaultItemCategories.Any;
             Items = DefaultItems.Geodes;
@@ -62,7 +62,7 @@ namespace LevelExtender.Framework.ItemBonus
     {
         public GeologistGemologistItemBonus()
         {
-            skillType = SkillTypes.DefaultSkillTypes.Mining;
+            SkillType = SkillTypes.DefaultSkillTypes.Mining;
             ItemBonusType = ItemBonusType.GeologistGemologistGemsWorthMore;
             ItemCategories = DefaultItemCategories.GemsOrMinerals;
             Items = DefaultItems.Any;
@@ -281,6 +281,7 @@ namespace LevelExtender.Framework.ItemBonus
         };
         public static bool ApplyMoreDrops(IEnumerable<LESkill> skills, StardewValley.Object item) 
         {
+            /// TODO: I'm sure this can be optimized :) ... skip Professions with no "Item Drop Rate" etc.
             var ret = false;
             ret = ItemBonuses.ApplyMoreDrops(MinerItemBonuses, skills, item) || ret;
             ret = ItemBonuses.ApplyMoreDrops(MinerBlacksmithItemBonuses, skills, item) || ret;
@@ -292,6 +293,7 @@ namespace LevelExtender.Framework.ItemBonus
         }
         public static bool ApplyWorthMore(IEnumerable<LESkill> skills, StardewValley.Object item, long specificPlayerID, ref int newprice)
         {
+            /// TODO: I'm sure this can be optimized :) ... skip Professions with no "Item Worth More" etc.
             var ret = false;
             ret = ItemBonuses.ApplyWorthMore(MinerItemBonuses, skills, item, specificPlayerID, ref newprice) || ret;
             ret = ItemBonuses.ApplyWorthMore(MinerBlacksmithItemBonuses, skills, item, specificPlayerID, ref newprice) || ret;

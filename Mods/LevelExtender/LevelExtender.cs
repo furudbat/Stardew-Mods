@@ -31,7 +31,7 @@ namespace LevelExtender
             get { return Monsters.Count == 0; }
         }
 
-        private static readonly int MAX_DOUBLE_ITEM_DROPS = 100;
+        private static readonly int MAX_DOUBLE_ITEM_DROPS = 20;
         private static readonly List<int> REQUIRED_XP_TABLE = new List<int> { 100, 380, 770, 1300, 2150, 3300, 4800, 6900, 10000, 15000 };
         private static readonly int BOBBER_BASEBAR_SIZE = 82;
 
@@ -498,16 +498,21 @@ namespace LevelExtender
         {
             var ret = true;
 
-            if (Config.DropExtraItemsByLevel)
+            if (item is StardewValley.Object)
             {
-                ret = DropExtraItems(item) && ret;
-            }
-            if (Config.DropExtraItemsByProfession)
-            {
-                if (item is StardewValley.Object)
+                StardewValley.Object obj = (StardewValley.Object)item;
+
+                if (Config.BetterItemQuality)
                 {
-                    StardewValley.Object obj = (StardewValley.Object)item;
+                    ret = ItemsBetterQuality(obj) && ret;
+                }
+                if (Config.DropExtraItemsByProfession)
+                {
                     ret = ItemsMoreDrops(obj) && ret;
+                }
+                if (Config.DropExtraItemsByLevel)
+                {
+                    ret = DropExtraItems(obj) && ret;
                 }
             }
 
@@ -525,9 +530,20 @@ namespace LevelExtender
             ForagingItemBonuses.ApplyMoreDrops(Skills, obj);
             FishingItemBonuses.ApplyMoreDrops(Skills, obj);
 
+            FarmingItemBonuses.ApplyBetterQuality(Skills, obj);
+
             return true;
         }
-        private bool DropExtraItems(Item item)
+        private bool ItemsBetterQuality(StardewValley.Object obj)
+        {
+            if (obj == null || obj.HasBeenInInventory)
+                return true;
+
+            FarmingItemBonuses.ApplyBetterQuality(Skills, obj);
+
+            return true;
+        }
+        private bool DropExtraItems(StardewValley.Object item)
         {
             if (item == null || item.HasBeenInInventory)
                 return true;
@@ -544,15 +560,12 @@ namespace LevelExtender
                     break;
 
                 var skillType = cat_entry.Key;
-                if (cat_entry.Value.Contains(itemCategory) && ShouldDoubleItem(skillType))
+                if (!cat_entry.Value.Contains(itemCategory)) {
+                    continue;
+                }
+                for (int i = 0; i < MAX_DOUBLE_ITEM_DROPS && ShouldDoubleItem(skillType, item); i++)
                 {
                     item.Stack += 1;
-
-                    for (int i = 0; i < MAX_DOUBLE_ITEM_DROPS && ShouldDoubleItem(skillType); i++)
-                    {
-                        item.Stack += 1;
-                    }
-
                     message = showExtraItemDropMessage(skillType, originalItemStack, item);
                 }
             }
@@ -576,11 +589,6 @@ namespace LevelExtender
                     message = I18n.ExtraItemMessageWithAmount(skillName: skillName, extraItemAmount: item.Stack - originalItemStack, itemName: item.DisplayName);
                 else
                     message = I18n.ExtraItemMessage(skillName: skillName, itemName: item.DisplayName);
-            }
-
-            if (message.Length > 0)
-            {
-                Logger.LogDebug($"'{message}'");
             }
 
             if (message.Length > 0 && item.salePrice() >= Config.MinItemPriceForNotifications && message != lastMessage)
@@ -656,11 +664,19 @@ namespace LevelExtender
             }
         }
 
-        private bool ShouldDoubleItem(SkillType skillType)
+        private bool ShouldDoubleItem(SkillType skillType, StardewValley.Object item)
         {
-            double drate = (skillType == DefaultSkillTypes.Farming || skillType == DefaultSkillTypes.Foraging) ? 0.002 / 2.0 : 0.002;
+            double drop_rate = (skillType == DefaultSkillTypes.Farming || skillType == DefaultSkillTypes.Foraging) ? 0.002 / 2.0 : 0.002;
             var skill = Skills.FirstOrDefault(s => s.Skill.Type == skillType);
-            return skill != null && Game1.random.NextDouble() <= (skill.Level * drate);
+            if (item.Stack >= 2)
+            {
+                drop_rate = drop_rate / (3.0 * item.Stack / 4.0);
+            }
+            if (item.Quality >= 1)
+            {
+                drop_rate = drop_rate / (item.Quality+1);
+            }
+            return skill != null && item.Stack > 0 && Game1.random.NextDouble() <= (skill.Level * drop_rate * ((double)Game1.player.DailyLuck / 1200.0 + 9.9999997473787516E-05));
         }
 
         private Monster GenerateMonster(int tier, Monster monster)
