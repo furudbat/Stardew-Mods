@@ -1,6 +1,7 @@
 ﻿using System;
 using Harmony;
 using LevelExtender.Common;
+using StardewValley.TerrainFeatures;
 
 namespace LevelExtender.Patches
 {

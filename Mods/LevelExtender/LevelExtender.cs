@@ -518,6 +518,27 @@ namespace LevelExtender
 
             return ret;
         }
+
+        public void plant_Postfix(HoeDirt hoeDirt, int index, int tileX, int tileY, Farmer who, bool isFertilizer, GameLocation location)
+        {
+            Logger.LogDebug($"plant_Postfix: {index} {isFertilizer} {hoeDirt.crop}");
+            if (hoeDirt == null || hoeDirt.crop == null)
+                return;
+
+            if (Config.CropsGrow == CropGrowOption.LinearByLevel)
+            {
+                ExtraCropGrow(hoeDirt);
+            }
+        }
+
+        private void ExtraCropGrow(HoeDirt hoeDirt)
+        {
+            if (hoeDirt.crop == null && !hoeDirt.crop.dead.Value)
+                return;
+            
+            FarmingItemBonuses.ApplyCropGrow(Skills, hoeDirt);
+        }
+
         private bool ItemsMoreDrops(StardewValley.Object obj)
         {
             if (obj == null || obj.HasBeenInInventory)

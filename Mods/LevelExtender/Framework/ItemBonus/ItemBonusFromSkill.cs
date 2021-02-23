@@ -4,6 +4,7 @@ using System.Linq;
 using LevelExtender.Common;
 using LevelExtender.LEAPI;
 using StardewValley;
+using StardewValley.TerrainFeatures;
 
 namespace LevelExtender.Framework.ItemBonus
 {
@@ -69,6 +70,7 @@ namespace LevelExtender.Framework.ItemBonus
     {
         public SkillType SkillType { get; set; }
         public ItemBonusType ItemBonusType { get; set; } = ItemBonusType.None;
+
         public List<int> ItemCategories { get; set; } = DefaultItemCategories.Any;
         public List<string> Items { get; set; } = DefaultItems.Any;
         public List<string> ExtraItems { get; set; } = DefaultItems.Any;
@@ -185,6 +187,66 @@ namespace LevelExtender.Framework.ItemBonus
                         case ItemBonusType.MinerBlacksmithBarsWorthMore:
                             break;
                         case ItemBonusType.GeologistGemologistGemsWorthMore:
+                            break;
+                        case ItemBonusType.ForesterTapperSyrupWorthMore:
+                            break;
+                        case ItemBonusType.FisherFishWorthMore:
+                            break;
+                        case ItemBonusType.FisherAnglerFishWorthMore:
+                            break;
+                        case ItemBonusType.BetterQuality:
+                            break;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public bool ApplyCropGrow(List<LESkill> skills, HoeDirt hoeDirt)
+        {
+            var skill = skills.FirstOrDefault(s => s.Type == SkillType);
+            var skillLevel = (skill != null) ? skill.Level : -1;
+
+            ModEntry.Logger.LogDebug($"ItemBonusFromSkill.ApplyCropGrow: skill: {skill.Name} {skillLevel}/{MinLevel};  {ItemBonusType} {Chance}; {ItemCategories.Count}, {Items.Count}");
+
+            if (skillLevel >= MinLevel)
+            {
+                ModEntry.Logger.LogDebug($"ItemBonusFromSkill.ApplyCropGrow: crop phase: {hoeDirt?.crop?.currentPhase}");
+                if (Chance > 0.0 && (Chance >= 1.0 || Game1.random.NextDouble() <= Chance))
+                {
+                    switch (ItemBonusType)
+                    {
+                        case ItemBonusType.TillerAgriculturistCropsGrowFaster:
+                            {
+                                if (Game1.player.professions.Contains((int)ItemBonusType))
+                                {
+                                    TillerAgriculturistCropsGrowFaster(skillLevel, hoeDirt);
+                                    return true;
+                                }
+                            }
+                            break;
+                        case ItemBonusType.None:
+                            break;
+                        case ItemBonusType.TillerCropsWorthMore:
+                            break;
+                        case ItemBonusType.TillerArtisanWorthMore:
+                            break;
+                        case ItemBonusType.RancherAnimalProductsWorthMore:
+                            break;
+                        case ItemBonusType.MinerMoreOre:
+                            break;
+                        case ItemBonusType.MinerBlacksmithBarsWorthMore:
+                            break;
+                        case ItemBonusType.MinerProspectorMoreCoal:
+                            break;
+                        case ItemBonusType.GeologistMoreGems:
+                            break;
+                        case ItemBonusType.GeologistExcavatorMoreGeodes:
+                            break;
+                        case ItemBonusType.GeologistGemologistGemsWorthMore:
+                            break;
+                        case ItemBonusType.GathererMoreForage:
                             break;
                         case ItemBonusType.ForesterTapperSyrupWorthMore:
                             break;
@@ -384,11 +446,63 @@ namespace LevelExtender.Framework.ItemBonus
         {
             item.Quality = Math.Max(item.Quality, value);
         }
-
-        public static void sellToStorePrice(StardewValley.Object item, long specificPlayerID, ref int newprice, double newpriceFactor)
+        private void sellToStorePrice(StardewValley.Object item, long specificPlayerID, ref int newprice, double newpriceFactor)
         {
             newprice = (int)(newprice * newpriceFactor);
             //ModEntry.Logger.LogDebug($"ItemBonusFromSkill.sellToStorePrice: new $ {newprice}");
+        }
+        private void TillerAgriculturistCropsGrowFaster(int skillLevel, HoeDirt hoeDirt)
+        {
+            Crop crop = hoeDirt.crop;
+            if (crop ==  null) {
+                return;
+            }
+
+
+            int daysOfGrow = 0;
+            int phases = crop.phaseDays.Count;
+            if (crop.fullyGrown.Value && crop.dayOfCurrentPhase.Value > 0)
+            {
+                daysOfGrow = crop.dayOfCurrentPhase.Value;
+            }
+            else
+            {
+                for (int i = 0; i < crop.phaseDays.Count - 1; ++i)
+                {
+                    if (hoeDirt.crop.currentPhase.Value == i)
+                        daysOfGrow -= crop.dayOfCurrentPhase.Value;
+
+                    if (hoeDirt.crop.currentPhase.Value <= i)
+                        daysOfGrow += crop.phaseDays[i];
+                }
+            }
+
+            if (crop.phaseDays.Count == 0)
+            {
+                return;
+            }
+
+            int subPhases = (int)(daysOfGrow * Value / 100.0);
+            if (crop.fullyGrown.Value && crop.dayOfCurrentPhase.Value > 0)
+            {
+                crop.dayOfCurrentPhase.Value -= Math.Max(1, subPhases);
+            }
+            else
+            {
+                for (int i = 0; i < crop.phaseDays.Count - 1 && subPhases > 0; ++i)
+                {
+                    if (i == crop.phaseDays.Count-2)
+                    {
+                        crop.phaseDays[i] -= Math.Max(1, subPhases);
+                    } else if (crop.phaseDays[i] > 1)
+                    {
+                        crop.phaseDays[i]--;
+                        subPhases--;
+                    }
+                }
+            }
+
+            ModEntry.Logger.LogDebug($"ItemBonusFromSkill.TillerAgriculturistCropsGrowFaster: new phases {crop.phaseDays[0]}...{crop.phaseDays[crop.phaseDays.Count-1]}");
         }
     }
 }

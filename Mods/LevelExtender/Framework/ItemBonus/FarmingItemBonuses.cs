@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using LevelExtender.Common;
+using StardewValley.TerrainFeatures;
 
 namespace LevelExtender.Framework.ItemBonus
 {
@@ -234,6 +235,54 @@ namespace LevelExtender.Framework.ItemBonus
             },
         };
 
+        public static List<TillerAgriculturistItemBonus> TillerAgriculturistItemBonuses => new List<TillerAgriculturistItemBonus>
+        {
+            new TillerAgriculturistItemBonus
+            {
+                MinLevel = 20,
+                Value = 5
+            },
+            new TillerAgriculturistItemBonus
+            {
+                MinLevel = 30,
+                Value = 9
+            },
+            new TillerAgriculturistItemBonus
+            {
+                MinLevel = 40,
+                Value = 12
+            },
+            new TillerAgriculturistItemBonus
+            {
+                MinLevel = 50,
+                Value = 15
+            },
+            new TillerAgriculturistItemBonus
+            {
+                MinLevel = 60,
+                Value = 18
+            },
+            new TillerAgriculturistItemBonus
+            {
+                MinLevel = 70,
+                Value = 21
+            },
+            new TillerAgriculturistItemBonus
+            {
+                MinLevel = 80,
+                Value = 24
+            },
+            new TillerAgriculturistItemBonus
+            {
+                MinLevel = 90,
+                Value = 27
+            },
+            new TillerAgriculturistItemBonus
+            {
+                MinLevel = 100,
+                Value = 30
+            },
+        };
 
         public static bool ApplyMoreDrops(IEnumerable<LESkill> skills, StardewValley.Object item)
         {
@@ -255,6 +304,13 @@ namespace LevelExtender.Framework.ItemBonus
         {
             var ret = false;
             ret = ItemBonuses.ApplyBetterQuality(BetterQualityCropsItemBonuses, skills, item) || ret;
+            return ret;
+        }
+
+        internal static bool ApplyCropGrow(List<LESkill> skills, HoeDirt hoeDirt)
+        {
+            var ret = false;
+            ret = ItemBonuses.ApplyCropGrow(TillerAgriculturistItemBonuses, skills, hoeDirt) || ret;
             return ret;
         }
     }

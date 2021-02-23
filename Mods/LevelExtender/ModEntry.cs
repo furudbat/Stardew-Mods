@@ -29,6 +29,10 @@ namespace LevelExtender
 
             var harmony = HarmonyInstance.Create(this.ModManifest.UniqueID);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
+            GameLocationPatch.Initialize(levelExtender);
+            FarmerPatch.Initialize(levelExtender);
+            ObjectSellToStorePricePatch.Initialize(levelExtender);
+            HoeDirtPlantPatch.Initialize(levelExtender);
 
             RegisterGameEvents(helper.Events);
 
@@ -63,7 +67,7 @@ namespace LevelExtender
                 configMenuApi.RegisterModConfig(ModManifest, () => Config = new ModConfig(), () => Helper.WriteConfig(Config));
 
                 configMenuApi.RegisterLabel(ModManifest, "Features", "Game changing features");
-                configMenuApi.RegisterSimpleOption(ModManifest, "Random Crop Grow", "Crops can grow fully or faster by day. (randomly, depending on your Farming-Level)", () => Config.CropsGrow, (bool val) => Config.CropsGrow = val);
+                //configMenuApi.RegisterSimpleOption(ModManifest, "Crop Grow", "Crops can grow fully or faster by day. (randomly, depending on your Farming-Level)", () => Config.CropsGrow, (bool val) => Config.CropsGrow = val);
                 configMenuApi.RegisterSimpleOption(ModManifest, "More XP from Monster", "Killing Monsters with one-hit gives more XP.", () => Config.MoreEXPByOneHitKills, (bool val) => Config.MoreEXPByOneHitKills = val);
                 configMenuApi.RegisterSimpleOption(ModManifest, "Drop Extra Items", "Drops more Items/Harvest. (randomly, depending on your Skill-Levels)", () => Config.DropExtraItemsByLevel, (bool val) => Config.DropExtraItemsByLevel = val);
                 configMenuApi.RegisterSimpleOption(ModManifest, "Extent Profession Affects", "Drops more Items/Harvest, Crops worth more and other Profession-based increases. (based on your Profession (like Tiller) and extending 10+ Skill-Level Professions)", () => Config.DropExtraItemsByProfession, (bool val) => Config.DropExtraItemsByProfession = val);
@@ -82,9 +86,6 @@ namespace LevelExtender
                 configMenuApi.RegisterSimpleOption(ModManifest, "Extra Item Noti. with Amount", "Show Extra Item Notification with Extra Item Amount, otherwise shows only a simple message.", () => Config.ExtraItemNotificationAmountMessage, (bool val) => Config.ExtraItemNotificationAmountMessage = val);
             }
             LEModHandler.Initialise(this.Monitor);
-            GameLocationPatch.Initialize(levelExtender);
-            FarmerPatch.Initialize(levelExtender);
-            ObjectSellToStorePricePatch.Initialize(levelExtender);
 
             // register commands
             if (Config.TestingMode)
@@ -167,7 +168,7 @@ namespace LevelExtender
                 System.Environment.Exit(1);
             }
 
-            if (Config.CropsGrow)
+            if (Config.CropsGrow == CropGrowOption.RandomByLevel)
             {
                 levelExtender.RandomCropGrows();
             }

@@ -1,15 +1,16 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using LevelExtender.Common;
+using StardewValley.TerrainFeatures;
 
 namespace LevelExtender.Framework.ItemBonus
 {
     static class ItemQuality
     {
-        public static readonly int Regular = 0;
-        public static readonly int Silver = 1;
-        public static readonly int Gold = 2;
-        public static readonly int Irudium = 4;
+        public static readonly int Regular = StardewValley.Object.lowQuality;
+        public static readonly int Silver = StardewValley.Object.medQuality;
+        public static readonly int Gold = StardewValley.Object.highQuality;
+        public static readonly int Irudium = StardewValley.Object.bestQuality;
 
     }
     static class ItemBonuses
@@ -71,6 +72,28 @@ namespace LevelExtender.Framework.ItemBonus
                 if (itemBonus.ApplyBetterQuality(skills, item))
                 {
                     ModEntry.Logger.LogDebug($"ItemBonuses.ApplyBetterQuality: skill: {skill?.Name} {itemBonus.MinLevel} {itemBonus.ItemBonusType}; item: {item.name} new Q: {item.Quality} ");
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static bool ApplyCropGrow<T>(List<T> itemBonuses, List<LESkill> skills, HoeDirt hoeDirt) where T : ItemBonusFromSkill
+        {
+            itemBonuses.Sort((a, b) => b.MinLevel.CompareTo(a.MinLevel));
+            foreach (var itemBonus in itemBonuses)
+            {
+                var skill = skills.FirstOrDefault(s => s.Type == itemBonus.SkillType);
+                var skillLevel = (skill != null) ? skill.Level : -1;
+                if (skillLevel < itemBonus.MinLevel)
+                {
+                    continue;
+                }
+
+                if (itemBonus.ApplyCropGrow(skills, hoeDirt))
+                {
+                    ModEntry.Logger.LogDebug($"ItemBonuses.ApplyCropGrow: crop phase: {hoeDirt?.crop?.currentPhase} {itemBonus.MinLevel} {itemBonus.ItemBonusType}; day: {hoeDirt?.crop?.dayOfCurrentPhase} phases: {hoeDirt?.crop?.phaseDays?.Count} ");
                     return true;
                 }
             }

@@ -92,6 +92,7 @@
     <Compile Include="ModEntry.cs" />
     <Compile Include="LEAPI\ISkillMod.cs" />
     <Compile Include="Framework\Mods\LEModHandler.cs" />
+    <Compile Include="Patches\HoeDirtPlantPatch.cs" />
     <Compile Include="Patches\ObjectSellToStorePricePatch.cs" />
     <Compile Include="Patches\FarmerPatch.cs" />
     <Compile Include="Patches\GameLocationPatch.cs" />
