@@ -19,7 +19,7 @@ using StardewValley.Tools;
 
 namespace LevelExtender
 {
-    internal class LevelExtender : ILevelExtender, LEModApi
+    internal class LevelExtender : ILevelExtender, ILEModApi
     {
         public ModConfig Config { get; set; }
         public Logger Logger { get; private set; }
@@ -108,7 +108,7 @@ namespace LevelExtender
         public int GetXPRequiredToLevel(string skillName, int level)
         {
             var skill = Skills.FirstOrDefault(s => s.Name == skillName);
-            return (skill != null && level >= 0 && level < skill.XPTable.Count && level <= skill.MaxLevel) ? skill.XPTable[level] : (skill != null)? skill.MaxXP : -1;
+            return (skill != null && level >= 0 && level < skill.XPTable.Count && level <= skill.MaxLevel) ? skill.XPTable[level] : (skill != null) ? skill.MaxXP : -1;
         }
 
         public bool SetLevel(string name, int value)
@@ -223,7 +223,6 @@ namespace LevelExtender
         {
             firstFade = false;
             lastMessage = "";
-            lastDrawXPBarsTime = DateTime.Now;
 
             Monsters.Clear();
             XPBar.Dispose();
@@ -265,7 +264,8 @@ namespace LevelExtender
             {
                 location = Game1.player.currentLocation.getRandomTile();
             }
-            if (!Game1.player.currentLocation.isTileLocationTotallyClearAndPlaceable(location)) {
+            if (!Game1.player.currentLocation.isTileLocationTotallyClearAndPlaceable(location))
+            {
                 return;
             }
 
@@ -348,7 +348,7 @@ namespace LevelExtender
                     else if (fishingLevel < 11)
                         bobberBarSize = BOBBER_BASEBAR_SIZE + bobberBonus + (int)(fishingLevel * 9);
                     else
-                        bobberBarSize = (2*BOBBER_BASEBAR_SIZE + 5) + bobberBonus + (int)(fishingLevel * 0.5);
+                        bobberBarSize = (2 * BOBBER_BASEBAR_SIZE + 5) + bobberBonus + (int)(fishingLevel * 0.5);
                 }
                 else
                 {
@@ -357,9 +357,9 @@ namespace LevelExtender
                     else if (fishingLevel < 11)
                         bobberBarSize = BOBBER_BASEBAR_SIZE + bobberBonus + (int)(fishingLevel * 7);
                     else if (fishingLevel > 10 && fishingLevel < 20)
-                        bobberBarSize = BOBBER_BASEBAR_SIZE + (3*BOBBER_BASEBAR_SIZE/4) + bobberBonus + (int)(fishingLevel);
+                        bobberBarSize = BOBBER_BASEBAR_SIZE + (3 * BOBBER_BASEBAR_SIZE / 4) + bobberBonus + (int)(fishingLevel);
                     else
-                        bobberBarSize = (2*BOBBER_BASEBAR_SIZE) + bobberBonus + (int)(fishingLevel * 0.8);
+                        bobberBarSize = (2 * BOBBER_BASEBAR_SIZE) + bobberBonus + (int)(fishingLevel * 0.8);
                 }
 
                 firstFade = true;
@@ -498,10 +498,8 @@ namespace LevelExtender
         {
             var ret = true;
 
-            if (item is StardewValley.Object)
+            if (item is StardewValley.Object obj)
             {
-                StardewValley.Object obj = (StardewValley.Object)item;
-
                 if (Config.BetterItemQuality)
                 {
                     ret = ItemsBetterQuality(obj) && ret;
@@ -560,20 +558,21 @@ namespace LevelExtender
                     break;
 
                 var skillType = cat_entry.Key;
-                if (!cat_entry.Value.Contains(itemCategory)) {
+                if (!cat_entry.Value.Contains(itemCategory))
+                {
                     continue;
                 }
                 for (int i = 0; i < MAX_DOUBLE_ITEM_DROPS && ShouldDoubleItem(skillType, item); i++)
                 {
                     item.Stack += 1;
-                    message = showExtraItemDropMessage(skillType, originalItemStack, item);
+                    message = ShowExtraItemDropMessage(skillType, originalItemStack, item);
                 }
             }
 
             return true;
         }
 
-        private string showExtraItemDropMessage(SkillType skillType, int originalItemStack, Item item)
+        private string ShowExtraItemDropMessage(SkillType skillType, int originalItemStack, Item item)
         {
             int itemCategory = item.Category;
             string skillName = skillType.Name;
@@ -648,7 +647,7 @@ namespace LevelExtender
 
             foreach (var key in farm.terrainFeatures.Keys)
             {
-                var terrainFeatureHoeDirt = (farm.terrainFeatures[key] is HoeDirt) ? (HoeDirt)farm.terrainFeatures[key] : null;
+                HoeDirt terrainFeatureHoeDirt = (farm.terrainFeatures[key] is HoeDirt) ? (HoeDirt)farm.terrainFeatures[key] : null;
                 if (terrainFeatureHoeDirt != null && terrainFeatureHoeDirt.crop != null && Game1.random.NextDouble() < growCompletelyChance)
                 {
                     terrainFeatureHoeDirt.crop.growCompletely();
@@ -674,7 +673,7 @@ namespace LevelExtender
             }
             if (item.Quality >= 1)
             {
-                drop_rate = drop_rate / (item.Quality+1);
+                drop_rate /= (item.Quality + 1);
             }
             return skill != null && item.Stack > 0 && Game1.random.NextDouble() <= (skill.Level * drop_rate * ((double)Game1.player.DailyLuck / 1200.0 + 9.9999997473787516E-05));
         }
@@ -697,7 +696,7 @@ namespace LevelExtender
 
                 monster.objectsToDrop.Add(Game1.random.Next(data.Count));
                 monster.displayName += " (BOSS)";
-                monster.Scale = monster.Scale * (float)(1 + (Game1.random.NextDouble() * combatLevel / 25.0));
+                monster.Scale *= (float)(1 + (Game1.random.NextDouble() * combatLevel / 25.0));
             }
             else
             {
@@ -761,15 +760,14 @@ namespace LevelExtender
             cooldownLastMessage.Enabled = true;
         }
 
-        private IModHelper helper;
-        private LEEvents LEEvents = new LEEvents();
+        private readonly IModHelper helper;
+        private readonly LEEvents LEEvents = new LEEvents();
         private ExtendedExperienceBar XPBar;
         private Timer cooldownLastMessage;
-        private DateTime lastDrawXPBarsTime = DateTime.Now;
         private bool firstFade = false;
         private string lastMessage = "";
-        private Dictionary<SkillType, List<int>> extraItemCategories = new Dictionary<SkillType, List<int>>();
-        private Dictionary<int, string> extraItemCategorySkillNames = new Dictionary<int, string>();
+        private readonly Dictionary<SkillType, List<int>> extraItemCategories = new Dictionary<SkillType, List<int>>();
+        private readonly Dictionary<int, string> extraItemCategorySkillNames = new Dictionary<int, string>();
     }
 
 }

@@ -25,8 +25,7 @@ namespace LevelExtender.Commands
             }
 
             string skill_name = args[0];
-            double value = 1.0;
-            bool validValue = double.TryParse(args[1], out value);
+            bool validValue = double.TryParse(args[1], out double value);
             if (!validValue)
             {
                 Logger.LogInformation("<value> must be a decimal");

@@ -5,7 +5,7 @@ namespace LevelExtender.Logging
 {
     internal class Logger
     {
-        public ModConfig Config { get; private set; } 
+        public ModConfig Config { get; private set; }
         public IMonitor LogMonitor { get; private set; }
         public Logger(ModConfig config, IMonitor logMonitor)
         {

@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using StardewValley;
 
 namespace LevelExtender
@@ -11,7 +7,7 @@ namespace LevelExtender
     /// <summary>
     /// SpaceCore API by spacechase0 - https://github.com/spacechase0/SpaceCore_SDV
     /// </summary>
-    public interface SpaceCoreAPI
+    public interface ISpaceCoreAPI
     {
         string[] GetCustomSkills();
         int GetLevelForCustomSkill(Farmer farmer, string skill);

@@ -18,8 +18,6 @@ namespace LevelExtender
 
     internal class ModEntry : Mod, IAssetEditor
     {
-        private bool SaveIsLoaded { get; set; } = false;
-
         public ModConfig Config { get; private set; }
         public static Logger Logger { get; private set; }
         public override void Entry(IModHelper helper)
@@ -59,7 +57,7 @@ namespace LevelExtender
             Config = Helper.ReadConfig<ModConfig>();
             levelExtender.Config = Config;
             Logger.Reset(Config, this.Monitor);
-            var configMenuApi = Helper.ModRegistry.GetApi<GenericModConfigMenuAPI>("spacechase0.GenericModConfigMenu");
+            var configMenuApi = Helper.ModRegistry.GetApi<IGenericModConfigMenuAPI>("spacechase0.GenericModConfigMenu");
             if (configMenuApi != null)
             {
                 configMenuApi.RegisterModConfig(ModManifest, () => Config = new ModConfig(), () => Helper.WriteConfig(Config));
@@ -118,7 +116,6 @@ namespace LevelExtender
 
         private void onOneSecondUpdateTicked(object sender, OneSecondUpdateTickedEventArgs e)
         {
-
             if (!Context.IsWorldReady)
                 return;
 

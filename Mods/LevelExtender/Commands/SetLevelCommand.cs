@@ -26,7 +26,7 @@ namespace LevelExtender.Commands
             }
 
             string skill_name = args[0];
-            int value = -1;
+            int value;
             bool validLevel = int.TryParse(args[1], out value);
             if (!validLevel && value >= 0)
             {

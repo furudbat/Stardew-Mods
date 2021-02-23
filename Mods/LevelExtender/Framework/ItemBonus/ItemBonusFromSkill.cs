@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using LevelExtender.Common;
 using LevelExtender.LEAPI;
-using StardewModdingAPI;
 using StardewValley;
-using StardewValley.Tools;
 
 namespace LevelExtender.Framework.ItemBonus
 {
@@ -77,7 +73,7 @@ namespace LevelExtender.Framework.ItemBonus
         public List<string> Items { get; set; } = DefaultItems.Any;
         public List<string> ExtraItems { get; set; } = DefaultItems.Any;
 
-        public int MinLevel { get; set;} = 0;
+        public int MinLevel { get; set; } = 0;
         public List<ItemBonusFromSkillValue> Values { get; set; } = new List<ItemBonusFromSkillValue> { new ItemBonusFromSkillValue() };
         public double Chance
         {
@@ -98,19 +94,23 @@ namespace LevelExtender.Framework.ItemBonus
                 Values.Sort((a, b) => b.Chance.CompareTo(a.Chance));
             }
         }
-        public int Value { 
-           get {
+        public int Value
+        {
+            get
+            {
                 return (Values.Count > 0) ? Values[0].Value : 0;
-           }
-           set {
+            }
+            set
+            {
                 if (Values.Count == 0)
                 {
-                    Values.Add(new ItemBonusFromSkillValue{ Value = value });
+                    Values.Add(new ItemBonusFromSkillValue { Value = value });
                 }
-                else {
+                else
+                {
                     Values[0].Value = value;
                 }
-           } 
+            }
         }
 
         public bool ApplyMoreDrops(IEnumerable<LESkill> skills, StardewValley.Object item)

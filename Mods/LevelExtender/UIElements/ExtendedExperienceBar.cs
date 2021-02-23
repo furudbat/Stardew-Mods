@@ -1,18 +1,16 @@
-﻿using LevelExtender.LEAPI;
-using LevelExtender.Logging;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using StardewModdingAPI;
-using StardewModdingAPI.Enums;
-using StardewModdingAPI.Events;
-using StardewValley;
-using StardewValley.Menus;
-using StardewValley.Tools;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
+using LevelExtender.LEAPI;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using StardewModdingAPI;
+using StardewModdingAPI.Events;
+using StardewValley;
+using StardewValley.Menus;
+using StardewValley.Tools;
 
 namespace LevelExtender.UIElements
 {
@@ -23,7 +21,7 @@ namespace LevelExtender.UIElements
     {
         private const int MaxBarWidth = 180;
 
-        private Dictionary<string, int> _lastXPs = new Dictionary<string, int>();
+        private readonly Dictionary<string, int> _lastXPs = new Dictionary<string, int>();
         private readonly List<ExperiencePointDisplay> _XPDisplays = new List<ExperiencePointDisplay>();
         private readonly TimeSpan _levelUpPauseTime = TimeSpan.FromSeconds(2);
         private readonly Color _iconColor = Color.White;
@@ -47,9 +45,9 @@ namespace LevelExtender.UIElements
         private int _requiredXPNextLevel = -1;
         private int _maxSkillLevel = -1;
 
-        private LEModApi _levelExtender;
+        private readonly ILEModApi _levelExtender;
 
-        public ExtendedExperienceBar(IModHelper helper, LEModApi levelExtender)
+        public ExtendedExperienceBar(IModHelper helper, ILEModApi levelExtender)
         {
             _helper = helper;
             _timeToDisappear.Elapsed += StopTimerAndFadeBarOut;
@@ -70,11 +68,12 @@ namespace LevelExtender.UIElements
             _helper.Events.Display.RenderingHud -= OnDisplayRenderingHud;
             _helper.Events.Player.Warped -= PlayerOnWarped;
             _helper.Events.GameLoop.UpdateTicked -= OnUpdateTicked;
-            if (_timeToDisappear != null) {
+            if (_timeToDisappear != null)
+            {
                 _timeToDisappear.Elapsed -= StopTimerAndFadeBarOut;
                 _timeToDisappear.Stop();
                 _timeToDisappear.Dispose();
-                _timeToDisappear = null; 
+                _timeToDisappear = null;
             }
         }
 
@@ -150,10 +149,9 @@ namespace LevelExtender.UIElements
                 return;
 
             Item currentItem = Game1.player.CurrentItem;
-            string skillName = "";
-
             if (_previousItem != currentItem)
             {
+                string skillName;
                 if (currentItem is FishingRod)
                 {
                     skillName = DefaultSkillNames.Fishing;
@@ -196,7 +194,7 @@ namespace LevelExtender.UIElements
             int skillLevel = args.CurrentLevel;
             int changedXP = args.ChangedXP;
             int requiredXPNextLevel = _levelExtender.GetXPRequiredToLevel(skillName, skillLevel);
-            int requiredXPPrevLevel = (skillLevel > 0)? _levelExtender.GetXPRequiredToLevel(skillName, skillLevel-1) : 0;
+            int requiredXPPrevLevel = (skillLevel > 0) ? _levelExtender.GetXPRequiredToLevel(skillName, skillLevel - 1) : 0;
             int maxSkillLevel = _levelExtender.GetSkillMaxLevel(skillName);
 
             ModEntry.Logger.LogDebug($"ExtendedExperienceBar.OnXPChanged: {skillName}, lvl: {skillLevel}, xp: {xp} ({changedXP}), prev. {requiredXPPrevLevel}/{requiredXPNextLevel}");
@@ -319,7 +317,7 @@ namespace LevelExtender.UIElements
                 if (_experienceBarShouldBeVisible &&
                     _showExperienceBar)
                 {
-                    int maxExperience = (_requiredXPNextLevel > 0 )? _requiredXPNextLevel - _requiredXPPrevLevel : -1;
+                    int maxExperience = (_requiredXPNextLevel > 0) ? _requiredXPNextLevel - _requiredXPPrevLevel : -1;
                     int currentExperience = _currentXP - _requiredXPPrevLevel;
                     int progressBarWidth = (maxExperience > 0) ? (int)((double)currentExperience / maxExperience * MaxBarWidth) : 0;
 
@@ -460,17 +458,19 @@ namespace LevelExtender.UIElements
             {
                 string strCurrentExperience = currentExperience.ToString();
                 string strMaxExperience = maxExperience.ToString();
-                strCurrentExperience = (currentExperience >= 10000) ? strCurrentExperience.Substring(0, strCurrentExperience.Length-4) : strCurrentExperience;
-                strMaxExperience = (maxExperience >= 10000) ? maxExperience.ToString().Substring(0, strMaxExperience.Length-4) : strMaxExperience;
+                strCurrentExperience = (currentExperience >= 10000) ? strCurrentExperience.Substring(0, strCurrentExperience.Length - 4) : strCurrentExperience;
+                strMaxExperience = (maxExperience >= 10000) ? maxExperience.ToString().Substring(0, strMaxExperience.Length - 4) : strMaxExperience;
 
                 string txtCurrentExperience = (currentExperience >= 10000) ? I18n.KAmountWithUnit(amount: strCurrentExperience) : strCurrentExperience;
                 string txtMaxExperience = (maxExperience >= 10000) ? I18n.KAmountWithUnit(amount: strMaxExperience) : strMaxExperience;
-                if (maxExperience < 0) {
+                if (maxExperience < 0)
+                {
                     txtMaxExperience = "---";
                 }
 
-                string barText = (maxExperience >= 0)? $"{txtCurrentExperience}/{txtMaxExperience}" : txtCurrentExperience;
-                if (currentExperience >= 10000 && maxExperience >= 10000) {
+                string barText = (maxExperience >= 0) ? $"{txtCurrentExperience}/{txtMaxExperience}" : txtCurrentExperience;
+                if (currentExperience >= 10000 && maxExperience >= 10000)
+                {
                     barText = I18n.XPUntilNextLevel(amount: maxExperience - currentExperience);
                 }
 

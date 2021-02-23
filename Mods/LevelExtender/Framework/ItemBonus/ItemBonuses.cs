@@ -4,7 +4,8 @@ using LevelExtender.Common;
 
 namespace LevelExtender.Framework.ItemBonus
 {
-    static class ItemQuality {
+    static class ItemQuality
+    {
         public static readonly int Regular = 0;
         public static readonly int Silver = 1;
         public static readonly int Gold = 2;

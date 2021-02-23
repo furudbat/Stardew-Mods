@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using StardewValley;
 
 namespace LevelExtender.UIElements
@@ -14,7 +9,7 @@ namespace LevelExtender.UIElements
     class ExperiencePointDisplay
     {
         private int _alpha = 100;
-        private float _experiencePoints;
+        private readonly float _experiencePoints;
         private Vector2 _position;
 
         public ExperiencePointDisplay(float experiencePoints, Vector2 position)

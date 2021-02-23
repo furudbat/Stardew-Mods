@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using LevelExtender.Common;
-using StardewModdingAPI;
 
 namespace LevelExtender.Framework.ItemBonus
 {
@@ -96,7 +91,7 @@ namespace LevelExtender.Framework.ItemBonus
                 Value = 50
             },
         };
-        public static bool ApplyMoreDrops(IEnumerable<LESkill> skills, StardewValley.Object item) 
+        public static bool ApplyMoreDrops(IEnumerable<LESkill> skills, StardewValley.Object item)
         {
             var ret = false;
             ret = ItemBonuses.ApplyMoreDrops(GathererItemBonuses, skills, item) || ret;

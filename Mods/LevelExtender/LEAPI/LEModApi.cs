@@ -4,7 +4,7 @@ using StardewModdingAPI;
 
 namespace LevelExtender.LEAPI
 {
-    public interface LEModApi
+    public interface ILEModApi
     {
         void Spawn_Rate(double osr);
         int[] currentXP();

@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using LevelExtender.Common;
-using StardewModdingAPI;
 
 namespace LevelExtender.Framework.ItemBonus
 {
@@ -279,7 +274,7 @@ namespace LevelExtender.Framework.ItemBonus
                 Value = 70
             },
         };
-        public static bool ApplyMoreDrops(IEnumerable<LESkill> skills, StardewValley.Object item) 
+        public static bool ApplyMoreDrops(IEnumerable<LESkill> skills, StardewValley.Object item)
         {
             /// TODO: I'm sure this can be optimized :) ... skip Professions with no "Item Drop Rate" etc.
             var ret = false;

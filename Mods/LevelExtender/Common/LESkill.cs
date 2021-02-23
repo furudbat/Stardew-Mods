@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using LevelExtender.LEAPI;
-using LevelExtender.Logging;
-using StardewValley;
 
 namespace LevelExtender.Common
 {
@@ -116,7 +114,7 @@ namespace LevelExtender.Common
             {
                 NeededXPFactor = needed_xp_factor.Value;
             }
-            GenerateXPTable(MaxLevel+1);
+            GenerateXPTable(MaxLevel + 1);
             _level = Skill.GetSkillLevel();
             _xp = skill.GetSkillExperience();
             Skill.SetSkillExperience(_xp);
@@ -171,7 +169,7 @@ namespace LevelExtender.Common
             {
                 if (_xp >= XPTable[lvl])
                 {
-                    ret = lvl+1;
+                    ret = lvl + 1;
                 }
             }
 
@@ -189,7 +187,7 @@ namespace LevelExtender.Common
                 XPTable.Add(xp);
             }
 
-            MaxXP = (MaxLevel - 1 < XPTable.Count) ? XPTable[MaxLevel-1] : XPTable.Max();
+            MaxXP = (MaxLevel - 1 < XPTable.Count) ? XPTable[MaxLevel - 1] : XPTable.Max();
 
             ModEntry.Logger.LogDebug($"generateXPTable {level}; needed XP: {XPTable[0]}, {XPTable[1]}, ..., {XPTable[XPTable.Count / 2]}, ..., {XPTable[XPTable.Count - 1]}; max XP {MaxXP}");
         }

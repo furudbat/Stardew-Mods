@@ -29,12 +29,15 @@ namespace LevelExtender.Commands
 
                 var table = new System.Text.StringBuilder();
                 table.Append(String.Format("{0,4} {1,15}\n\n", "Level", "Req. XP"));
-                for (int level = skill.Level; level < skill.XPTable.Count;level++) {
+                for (int level = skill.Level; level < skill.XPTable.Count; level++)
+                {
                     var reqxp = skill.XPTable[level];
                     table.Append(String.Format("{0,4} {1,15}\n", level, reqxp));
                 }
                 Logger.LogInformation(table.ToString());
-            } else {
+            }
+            else
+            {
                 Logger.LogInformation($"ShowXPTableSkillCommand: Skill {skill_name} not found!");
             }
         }
