@@ -533,7 +533,7 @@ namespace LevelExtender
 
         private void ExtraCropGrow(HoeDirt hoeDirt)
         {
-            if (hoeDirt.crop == null && !hoeDirt.crop.dead.Value)
+            if (hoeDirt.crop == null || hoeDirt.crop.dead.Value)
                 return;
             
             FarmingItemBonuses.ApplyCropGrow(Skills, hoeDirt);
