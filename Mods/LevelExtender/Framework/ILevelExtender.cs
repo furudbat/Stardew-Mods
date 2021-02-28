@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework;
 using StardewValley;
 using StardewValley.TerrainFeatures;
 
-namespace LevelExtender.Common
+namespace LevelExtender.Framework
 {
     internal interface ILevelExtender
     {

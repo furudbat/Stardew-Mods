@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using LevelExtender.Common;
+using LevelExtender.Framework.SkillTypes;
 
 namespace LevelExtender.Framework.ItemBonus
 {
@@ -7,7 +7,7 @@ namespace LevelExtender.Framework.ItemBonus
     {
         public MinerItemBonus()
         {
-            SkillType = SkillTypes.DefaultSkillTypes.Mining;
+            SkillType = DefaultSkillTypes.Mining;
             ItemBonusType = ItemBonusType.MinerMoreOre;
             ItemCategories = DefaultItemCategories.OresOrBars;
             Items = DefaultItems.Ores;
@@ -17,7 +17,7 @@ namespace LevelExtender.Framework.ItemBonus
     {
         public MinerBlacksmithItemBonus()
         {
-            SkillType = SkillTypes.DefaultSkillTypes.Mining;
+            SkillType = DefaultSkillTypes.Mining;
             ItemBonusType = ItemBonusType.MinerBlacksmithBarsWorthMore;
             ItemCategories = DefaultItemCategories.OresOrBars;
             Items = DefaultItems.Bars;
@@ -27,7 +27,7 @@ namespace LevelExtender.Framework.ItemBonus
     {
         public MinerProspectorItemBonus()
         {
-            SkillType = SkillTypes.DefaultSkillTypes.Mining;
+            SkillType = DefaultSkillTypes.Mining;
             ItemBonusType = ItemBonusType.MinerProspectorMoreCoal;
             ItemCategories = DefaultItemCategories.OresOrBars;
             Items = DefaultItems.Coal;
@@ -37,7 +37,7 @@ namespace LevelExtender.Framework.ItemBonus
     {
         public GeologistItemBonus()
         {
-            SkillType = SkillTypes.DefaultSkillTypes.Mining;
+            SkillType = DefaultSkillTypes.Mining;
             ItemBonusType = ItemBonusType.GeologistMoreGems;
             ItemCategories = DefaultItemCategories.Gems;
             Items = DefaultItems.Any;
@@ -47,7 +47,7 @@ namespace LevelExtender.Framework.ItemBonus
     {
         public GeologistExcavatorItemBonus()
         {
-            SkillType = SkillTypes.DefaultSkillTypes.Mining;
+            SkillType = DefaultSkillTypes.Mining;
             ItemBonusType = ItemBonusType.GeologistExcavatorMoreGeodes;
             ItemCategories = DefaultItemCategories.Any;
             Items = DefaultItems.Geodes;
@@ -57,7 +57,7 @@ namespace LevelExtender.Framework.ItemBonus
     {
         public GeologistGemologistItemBonus()
         {
-            SkillType = SkillTypes.DefaultSkillTypes.Mining;
+            SkillType = DefaultSkillTypes.Mining;
             ItemBonusType = ItemBonusType.GeologistGemologistGemsWorthMore;
             ItemCategories = DefaultItemCategories.GemsOrMinerals;
             Items = DefaultItems.Any;
@@ -71,52 +71,62 @@ namespace LevelExtender.Framework.ItemBonus
             new MinerItemBonus
             {
                 MinLevel = 10,
-                Value = 1
+                Value = 1,
+                Chance = 0.25
             },
             new MinerItemBonus
             {
                 MinLevel = 20,
-                Value = 2
+                Value = 1,
+                Chance = 0.5
             },
             new MinerItemBonus
             {
                 MinLevel = 30,
-                Value = 3
+                Value = 2,
+                Chance = 0.25
             },
             new MinerItemBonus
             {
                 MinLevel = 40,
-                Value = 4
+                Value = 2,
+                Chance = 0.5
             },
             new MinerItemBonus
             {
                 MinLevel = 50,
-                Value = 5
+                Value = 2,
+                Chance = 0.75
             },
             new MinerItemBonus
             {
                 MinLevel = 60,
-                Value = 6
+                Value = 3,
+                Chance = 0.10
             },
             new MinerItemBonus
             {
                 MinLevel = 70,
-                Value = 7
+                Value = 3,
+                Chance = 0.25
             },
             new MinerItemBonus
             {
                 MinLevel = 80,
-                Value = 8
+                Value = 4,
+                Chance = 0.5
             },
             new MinerItemBonus
             {
                 MinLevel = 90,
-                Value = 9
+                Value = 4,
+                Chance = 0.10
             },
             new MinerItemBonus
             {
                 MinLevel = 100,
-                Value = 10
+                Value = 5,
+                Chance = 0.25
             },
         };
         public static List<MinerBlacksmithItemBonus> MinerBlacksmithItemBonuses => new List<MinerBlacksmithItemBonus>

@@ -6,5 +6,11 @@
   "UniqueID": "Unidarkshin.LevelExtender",
   "EntryDll": "LevelExtender.dll",
   "MinimumApiVersion": "3.7",
-  "UpdateKeys": [ "Nexus:1471" ]
+  "UpdateKeys": [ "Nexus:1471" ],
+  "Dependencies": [
+    {
+      "UniqueID": "spacechase0.GenericModConfigMenu",
+      "IsRequired": false
+    }
+  ]
 }

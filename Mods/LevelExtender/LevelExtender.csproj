@@ -34,6 +34,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup>
     <ModFolderName>LevelExtender</ModFolderName>
@@ -60,13 +61,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands\SetXPCommand.cs" />
+    <Compile Include="Commands\DebugModeCommand.cs" />
     <Compile Include="Commands\ShowXPTableSkillCommand.cs" />
     <Compile Include="Commands\SetLevelCommand.cs" />
     <Compile Include="Commands\LegacySetNeededXPFactorCommand.cs" />
     <Compile Include="Commands\LegacyToggleOverworldMonstersCommand.cs" />
     <Compile Include="Commands\LegacySetLevelCommand.cs" />
     <Compile Include="Commands\LegacyShowXPTableCommand.cs" />
-    <Compile Include="Common\LESkill.cs" />
+    <Compile Include="Framework\LESkill.cs" />
     <Compile Include="Framework\ItemBonus\FishingItemBonuses.cs" />
     <Compile Include="Framework\ItemBonus\ForagingItemBonuses.cs" />
     <Compile Include="Framework\ItemBonus\MiningItemBonuses.cs" />
@@ -79,16 +81,18 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>I18n.tt</DependentUpon>
     </Compile>
+    <Compile Include="LEAPI\ISkill.cs" />
     <Compile Include="LEAPI\LEEvents.cs" />
     <Compile Include="Framework\SMAPICommand.cs" />
     <Compile Include="GenericModConfigMenuAPI.cs" />
-    <Compile Include="Common\ILevelExtender.cs" />
+    <Compile Include="Framework\ILevelExtender.cs" />
     <Compile Include="LEAPI\ILESkill.cs" />
     <Compile Include="LEAPI\LEModApi.cs" />
     <Compile Include="LevelExtender.cs" />
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="Logging\LogLevel.cs" />
     <Compile Include="ModConfig.cs" />
+    <Compile Include="ModData.cs" />
     <Compile Include="ModEntry.cs" />
     <Compile Include="LEAPI\ISkillMod.cs" />
     <Compile Include="Framework\Mods\LEModHandler.cs" />

@@ -3,13 +3,19 @@ using LevelExtender.Logging;
 
 namespace LevelExtender
 {
-    internal enum CropGrowOption {
-        RandomByLevel,
-        LinearByLevel
+    public enum CropsGrowOption {
+        LinearByLevel,
+        RandomByLevel
+    }
+
+    public enum DrawExtraItemNotificationsOption {
+        Disable,
+        Enable,
+        EnableWithAmount
     }
     /// <summary>Represents options for this mod.</summary>
     [Serializable]
-    internal class ModConfig
+    public class ModConfig
     {
         /*********
         ** Accessors
@@ -23,12 +29,11 @@ namespace LevelExtender
         public bool DrawXPBars { get; set; } = true;
         public bool DrawXPGain { get; set; } = true;
 
-        public bool DrawExtraItemNotifications { get; set; } = false;
+        public DrawExtraItemNotificationsOption DrawExtraItemNotifications { get; set; } = DrawExtraItemNotificationsOption.Disable;
         public int MinItemPriceForNotifications { get; set; } = 50;
         public bool DrawNotificationsAsHUDMessage { get; set; } = false;
-        public bool ExtraItemNotificationAmountMessage { get; set; } = true;
 
-        public CropGrowOption CropsGrow { get; set; } = CropGrowOption.LinearByLevel;
+        public CropsGrowOption CropsGrow { get; set; } = CropsGrowOption.LinearByLevel;
         public bool MoreEXPByOneHitKills { get; set; } = true;
         public bool DropExtraItemsByLevel { get; set; } = true;
         public bool DropExtraItemsByProfession { get; set; } = true;

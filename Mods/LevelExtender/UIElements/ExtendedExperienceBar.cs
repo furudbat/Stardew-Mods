@@ -149,7 +149,7 @@ namespace LevelExtender.UIElements
                 return;
 
             Item currentItem = Game1.player.CurrentItem;
-            if (_previousItem != currentItem)
+            if (currentItem != null && _previousItem != currentItem)
             {
                 string skillName;
                 if (currentItem is FishingRod)
@@ -160,9 +160,17 @@ namespace LevelExtender.UIElements
                 {
                     skillName = DefaultSkillNames.Mining;
                 }
-                else if (currentItem is MeleeWeapon && currentItem.Name != "Scythe")
+                else if (currentItem is MeleeWeapon && currentItem.Name != "Scythe" && currentItem.Name != "Golden Scythe")
                 {
                     skillName = DefaultSkillNames.Combat;
+                }
+                else if (currentItem is MeleeWeapon && (currentItem.Name == "Scythe" || currentItem.Name == "Golden Scythe"))
+                {
+                    skillName = DefaultSkillNames.Farming;
+                }
+                else if (currentItem.Name == "Watering Can" || currentItem.Name == "Cooper Watering Can" || currentItem.Name == "Steel Watering Can" || currentItem.Name == "Gold Watering Can" || currentItem.Name == "Iridium Watering Can")
+                {
+                    skillName = DefaultSkillNames.Farming;
                 }
                 else if (Game1.currentLocation is Farm && !(currentItem is Axe))
                 {
@@ -458,8 +466,8 @@ namespace LevelExtender.UIElements
             {
                 string strCurrentExperience = currentExperience.ToString();
                 string strMaxExperience = maxExperience.ToString();
-                strCurrentExperience = (currentExperience >= 10000) ? strCurrentExperience.Substring(0, strCurrentExperience.Length - 4) : strCurrentExperience;
-                strMaxExperience = (maxExperience >= 10000) ? maxExperience.ToString().Substring(0, strMaxExperience.Length - 4) : strMaxExperience;
+                strCurrentExperience = (currentExperience >= 10000) ? strCurrentExperience.Substring(0, strCurrentExperience.Length - 3) : strCurrentExperience;
+                strMaxExperience = (maxExperience >= 10000) ? maxExperience.ToString().Substring(0, strMaxExperience.Length - 3) : strMaxExperience;
 
                 string txtCurrentExperience = (currentExperience >= 10000) ? I18n.KAmountWithUnit(amount: strCurrentExperience) : strCurrentExperience;
                 string txtMaxExperience = (maxExperience >= 10000) ? I18n.KAmountWithUnit(amount: strMaxExperience) : strMaxExperience;

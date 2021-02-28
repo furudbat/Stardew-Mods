@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Timers;
-using LevelExtender.Common;
+using LevelExtender.Framework.SkillTypes;
 using LevelExtender.Framework;
 using LevelExtender.Framework.ItemBonus;
-using LevelExtender.Framework.SkillTypes;
 using LevelExtender.LEAPI;
 using LevelExtender.Logging;
 using LevelExtender.UIElements;
@@ -19,7 +18,7 @@ using StardewValley.Tools;
 
 namespace LevelExtender
 {
-    internal class LevelExtender : ILevelExtender, ILEModApi
+    public class LevelExtender : ILevelExtender, ILEModApi
     {
         public ModConfig Config { get; set; }
         public Logger Logger { get; private set; }
@@ -31,9 +30,9 @@ namespace LevelExtender
             get { return Monsters.Count == 0; }
         }
 
-        private static readonly int MAX_DOUBLE_ITEM_DROPS = 20;
-        private static readonly List<int> REQUIRED_XP_TABLE = new List<int> { 100, 380, 770, 1300, 2150, 3300, 4800, 6900, 10000, 15000 };
-        private static readonly int BOBBER_BASEBAR_SIZE = 82;
+        public static readonly int MAX_DOUBLE_ITEM_DROPS = 20;
+        public static readonly List<int> REQUIRED_XP_TABLE = new List<int> { 100, 380, 770, 1300, 2150, 3300, 4800, 6900, 10000, 15000 };
+        public static readonly int BOBBER_BASEBAR_SIZE = 82;
 
         public LevelExtender(ModConfig config, IModHelper helper, IMonitor logMonitor)
         {
@@ -169,7 +168,11 @@ namespace LevelExtender
             /// @TODO: add SpaceCore skills (?)
             foreach (var skill in SkillsList.AllSkills)
             {
-                LESkill leSkill = new LESkill(skill, LEEvents, 1.0, new List<int>(REQUIRED_XP_TABLE));
+                double xp_factor = (skill.Type == DefaultSkillTypes.Fishing)? 0.5 : 1.0;
+                if (skill.Type == DefaultSkillTypes.Combat) {
+                    xp_factor = 0.75;
+                }
+                LESkill leSkill = new LESkill(skill, LEEvents, xp_factor, new List<int>(REQUIRED_XP_TABLE));
                 Skills.Add(leSkill);
                 extraItemCategories.Add(skill.Type, new List<int>(skill.ExtraItemCategories()));
             }
@@ -212,7 +215,7 @@ namespace LevelExtender
                 }
             }
 
-            ModEntry.Logger.LogVerbose($"InitSkills: skills {Skills.Count}");
+            ModEntry.Logger.LogDebug($"InitSkills: skills {Skills.Count}");
         }
 
         public void CleanUpMonters()
@@ -525,7 +528,7 @@ namespace LevelExtender
             if (hoeDirt == null || hoeDirt.crop == null)
                 return;
 
-            if (Config.CropsGrow == CropGrowOption.LinearByLevel)
+            if (Config.CropsGrow == CropsGrowOption.LinearByLevel)
             {
                 ExtraCropGrow(hoeDirt);
             }
@@ -603,9 +606,9 @@ namespace LevelExtender
             }
 
             var message = "";
-            if (Config.DrawExtraItemNotifications)
+            if (Config.DrawExtraItemNotifications != DrawExtraItemNotificationsOption.Disable)
             {
-                if (Config.ExtraItemNotificationAmountMessage)
+                if (Config.DrawExtraItemNotifications == DrawExtraItemNotificationsOption.EnableWithAmount)
                     message = I18n.ExtraItemMessageWithAmount(skillName: skillName, extraItemAmount: item.Stack - originalItemStack, itemName: item.DisplayName);
                 else
                     message = I18n.ExtraItemMessage(skillName: skillName, itemName: item.DisplayName);
@@ -617,7 +620,7 @@ namespace LevelExtender
                 var messageColor = Color.DeepSkyBlue;
 
                 if (Config.DrawNotificationsAsHUDMessage)
-                    Game1.addHUDMessage(new HUDMessage(message, messageColor, HUB_MESSAGE_TIME_LEFT, true));
+                    Game1.addHUDMessage(new HUDMessage(message, item.Stack - originalItemStack, true, messageColor, item));
                 else
                     Game1.chatBox.addMessage(message, messageColor);
 
@@ -696,7 +699,7 @@ namespace LevelExtender
             {
                 drop_rate /= (item.Quality + 1);
             }
-            return skill != null && item.Stack > 0 && Game1.random.NextDouble() <= (skill.Level * drop_rate * ((double)Game1.player.DailyLuck / 1200.0 + 9.9999997473787516E-05));
+            return skill != null && item.Stack > 0 && Game1.random.NextDouble() <= ((skill.Level * drop_rate) + ((double)Game1.player.DailyLuck / 1200.0 + 9.9999997473787516E-05));
         }
 
         private Monster GenerateMonster(int tier, Monster monster)

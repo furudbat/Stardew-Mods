@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using LevelExtender.Common;
 using LevelExtender.LEAPI;
 using StardewValley;
 using StardewValley.TerrainFeatures;
@@ -49,6 +48,7 @@ namespace LevelExtender.Framework.ItemBonus
         public static readonly List<int> GemsOrMinerals = new List<int> { StardewValley.Object.GemCategory, StardewValley.Object.mineralsCategory };
         public static readonly List<int> Syrup = new List<int> { StardewValley.Object.syrupCategory };
         public static readonly List<int> Fish = new List<int> { StardewValley.Object.FishCategory };
+        public static readonly List<int> GreensForaging = new List<int> { StardewValley.Object.GreensCategory };
     }
 
     internal static class DefaultItems

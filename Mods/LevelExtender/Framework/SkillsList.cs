@@ -6,7 +6,7 @@ using StardewValley;
 
 namespace LevelExtender.Framework
 {
-    static class SkillsList
+    public static class SkillsList
     {
 
         /// <summary>The default skills available in the unmodded game.</summary>

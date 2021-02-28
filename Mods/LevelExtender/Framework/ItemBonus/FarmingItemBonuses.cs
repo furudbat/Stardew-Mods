@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using LevelExtender.Common;
+using LevelExtender.Framework.SkillTypes;
 using StardewValley.TerrainFeatures;
 
 namespace LevelExtender.Framework.ItemBonus
@@ -8,7 +8,7 @@ namespace LevelExtender.Framework.ItemBonus
     {
         public TillerItemBonus()
         {
-            SkillType = SkillTypes.DefaultSkillTypes.Farming;
+            SkillType = DefaultSkillTypes.Farming;
             ItemBonusType = ItemBonusType.TillerCropsWorthMore;
             ItemCategories = DefaultItemCategories.Crops;
         }
@@ -17,7 +17,7 @@ namespace LevelExtender.Framework.ItemBonus
     {
         public TillerArtisanItemBonus()
         {
-            SkillType = SkillTypes.DefaultSkillTypes.Farming;
+            SkillType = DefaultSkillTypes.Farming;
             ItemBonusType = ItemBonusType.TillerArtisanWorthMore;
             ItemCategories = DefaultItemCategories.Artisan;
         }
@@ -26,7 +26,7 @@ namespace LevelExtender.Framework.ItemBonus
     {
         public TillerAgriculturistItemBonus()
         {
-            SkillType = SkillTypes.DefaultSkillTypes.Farming;
+            SkillType = DefaultSkillTypes.Farming;
             ItemBonusType = ItemBonusType.TillerAgriculturistCropsGrowFaster;
         }
     }
@@ -34,7 +34,7 @@ namespace LevelExtender.Framework.ItemBonus
     {
         public RangerItemBonus()
         {
-            SkillType = SkillTypes.DefaultSkillTypes.Farming;
+            SkillType = DefaultSkillTypes.Farming;
             ItemBonusType = ItemBonusType.RancherAnimalProductsWorthMore;
             ItemCategories = DefaultItemCategories.AnimalProducts;
         }
@@ -43,7 +43,7 @@ namespace LevelExtender.Framework.ItemBonus
     {
         public BetterQualityCropsItemBonus()
         {
-            SkillType = SkillTypes.DefaultSkillTypes.Farming;
+            SkillType = DefaultSkillTypes.Farming;
             ItemBonusType = ItemBonusType.BetterQuality;
             ItemCategories = DefaultItemCategories.Crops;
             ExtraItems = DefaultItems.ExtraCrops;

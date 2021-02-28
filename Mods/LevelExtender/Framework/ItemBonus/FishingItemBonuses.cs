@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using LevelExtender.Common;
+using LevelExtender.Framework.SkillTypes;
 
 namespace LevelExtender.Framework.ItemBonus
 {
@@ -7,7 +7,7 @@ namespace LevelExtender.Framework.ItemBonus
     {
         public FisherItemBonus()
         {
-            SkillType = SkillTypes.DefaultSkillTypes.Fishing;
+            SkillType = DefaultSkillTypes.Fishing;
             ItemBonusType = ItemBonusType.FisherFishWorthMore;
             ItemCategories = DefaultItemCategories.Fish;
         }

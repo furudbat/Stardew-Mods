@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using LevelExtender.Common;
+using LevelExtender.Framework.SkillTypes;
 
 namespace LevelExtender.Framework.ItemBonus
 {
@@ -7,16 +7,16 @@ namespace LevelExtender.Framework.ItemBonus
     {
         public GathererItemBonus()
         {
-            SkillType = SkillTypes.DefaultSkillTypes.Foraging;
+            SkillType = DefaultSkillTypes.Foraging;
             ItemBonusType = ItemBonusType.GathererMoreForage;
-            ItemCategories = DefaultItemCategories.Foraging;
+            ItemCategories = DefaultItemCategories.GreensForaging;
         }
     }
     internal class ForesterTapperItemBonus : ItemBonusFromSkill
     {
         public ForesterTapperItemBonus()
         {
-            SkillType = SkillTypes.DefaultSkillTypes.Foraging;
+            SkillType = DefaultSkillTypes.Foraging;
             ItemBonusType = ItemBonusType.ForesterTapperSyrupWorthMore;
             ItemCategories = DefaultItemCategories.Syrup;
         }
@@ -30,7 +30,7 @@ namespace LevelExtender.Framework.ItemBonus
             {
                 MinLevel = 10,
                 Chance = 0.25,
-                Value = 25
+                Value = 2
             },
             new GathererItemBonus
             {

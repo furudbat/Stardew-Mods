@@ -7,7 +7,7 @@ namespace LevelExtender.LEAPI
 {
     // from SkillPrestige by Alphablackwolf - https://github.com/Alphablackwolf/SkillPrestige
     /// <summary>Represents a skill in Stardew Valley.</summary>
-    public class Skill
+    public class Skill : ISkill
     {
         /*********
         ** Accessors
@@ -16,10 +16,10 @@ namespace LevelExtender.LEAPI
         public SkillType Type { get; set; }
 
         /// <summary>An action to set the skill's level. For the unmodded game, this sets the relevant player field (e.g. <see cref="Farmer.farmingLevel"/>). If you are implementing this class for your mod it should be whatever would be needed to set the skill level to a given integer.</summary>
-        public Action<int> SetSkillLevel;
+        public Action<int> SetSkillLevel { get; set; }
 
         /// <summary>A function to return the skill's level. For the unmodded game. this gets the relevant player field (e.g. <see cref="Farmer.farmingLevel"/>). If you are implementing this class for your mod it should be whatever would be needed to retrieve the player's current skill level.</summary>
-        public Func<int> GetSkillLevel;
+        public Func<int> GetSkillLevel { get; set; }
 
         /// <summary>An action to get the skill's experience. For the unmodded game, this updates the <see cref="Farmer.experiencePoints"/> array based on <see cref="SkillType.Ordinal"/>. If you are implementing this class for your mod it should be whatever would be needed to set the skill experience level to a given integer.</summary>
         // ReSharper disable once MemberCanBePrivate.Global used by other mods.
