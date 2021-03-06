@@ -1,21 +1,21 @@
 ﻿using System.Collections.Generic;
-using LevelExtender.Framework.SkillTypes;
+using System.Linq;
 
 namespace LevelExtender.Framework.ItemBonus
 {
-    internal class FisherItemBonus : ItemBonusFromSkill
+    class FisherItemBonus : ItemBonusBySkillData
     {
         public FisherItemBonus()
         {
-            SkillType = DefaultSkillTypes.Fishing;
-            ItemBonusType = ItemBonusType.FisherFishWorthMore;
+            SkillId = SkillsList.DefaultSkillNames.Fishing;
+            Profession = ItemBonusProfession.FisherFishWorthMore;
             ItemCategories = DefaultItemCategories.Fish;
         }
     }
 
-    internal static class FishingItemBonuses
+    class FishingItemBonuses : IItemBonusesRegistration
     {
-        public static List<FisherItemBonus> FisherAnglerItemBonuses => new List<FisherItemBonus>
+        public List<FisherItemBonus> FisherAnglerItemBonuses => new List<FisherItemBonus>
         {
             new FisherItemBonus
             {
@@ -43,17 +43,11 @@ namespace LevelExtender.Framework.ItemBonus
                 Value = 150
             },
         };
-        public static bool ApplyMoreDrops(IEnumerable<LESkill> skills, StardewValley.Object item)
+        public List<IEnumerable<ItemBonusBySkillData>> RegisterItemBonuses()
         {
-            var ret = false;
-            ret = ItemBonuses.ApplyMoreDrops(FisherAnglerItemBonuses, skills, item) || ret;
-            return ret;
-        }
-        public static bool ApplyWorthMore(IEnumerable<LESkill> skills, StardewValley.Object item, long specificPlayerID, ref int newprice)
-        {
-            var ret = false;
-            ret = ItemBonuses.ApplyWorthMore(FisherAnglerItemBonuses, skills, item, specificPlayerID, ref newprice) || ret;
-            return ret;
+            return new List<IEnumerable<ItemBonusBySkillData>> {
+                FisherAnglerItemBonuses.Cast<ItemBonusBySkillData>(),
+            };
         }
     }
 }

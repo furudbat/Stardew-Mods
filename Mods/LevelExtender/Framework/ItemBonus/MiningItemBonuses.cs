@@ -1,72 +1,72 @@
 ﻿using System.Collections.Generic;
-using LevelExtender.Framework.SkillTypes;
+using System.Linq;
 
 namespace LevelExtender.Framework.ItemBonus
 {
-    internal class MinerItemBonus : ItemBonusFromSkill
+    class MinerItemBonus : ItemBonusBySkillData
     {
         public MinerItemBonus()
         {
-            SkillType = DefaultSkillTypes.Mining;
-            ItemBonusType = ItemBonusType.MinerMoreOre;
+            SkillId = SkillsList.DefaultSkillNames.Mining;
+            Profession = ItemBonusProfession.MinerMoreOre;
             ItemCategories = DefaultItemCategories.OresOrBars;
             Items = DefaultItems.Ores;
         }
     }
-    internal class MinerBlacksmithItemBonus : MinerItemBonus
+    class MinerBlacksmithItemBonus : MinerItemBonus
     {
         public MinerBlacksmithItemBonus()
         {
-            SkillType = DefaultSkillTypes.Mining;
-            ItemBonusType = ItemBonusType.MinerBlacksmithBarsWorthMore;
+            SkillId = SkillsList.DefaultSkillNames.Mining;
+            Profession = ItemBonusProfession.MinerBlacksmithBarsWorthMore;
             ItemCategories = DefaultItemCategories.OresOrBars;
             Items = DefaultItems.Bars;
         }
     }
-    internal class MinerProspectorItemBonus : MinerItemBonus
+    class MinerProspectorItemBonus : MinerItemBonus
     {
         public MinerProspectorItemBonus()
         {
-            SkillType = DefaultSkillTypes.Mining;
-            ItemBonusType = ItemBonusType.MinerProspectorMoreCoal;
+            SkillId = SkillsList.DefaultSkillNames.Mining;
+            Profession = ItemBonusProfession.MinerProspectorMoreCoal;
             ItemCategories = DefaultItemCategories.OresOrBars;
             Items = DefaultItems.Coal;
         }
     }
-    internal class GeologistItemBonus : ItemBonusFromSkill
+    class GeologistItemBonus : ItemBonusBySkillData
     {
         public GeologistItemBonus()
         {
-            SkillType = DefaultSkillTypes.Mining;
-            ItemBonusType = ItemBonusType.GeologistMoreGems;
+            SkillId = SkillsList.DefaultSkillNames.Mining;
+            Profession = ItemBonusProfession.GeologistMoreGems;
             ItemCategories = DefaultItemCategories.Gems;
             Items = DefaultItems.Any;
         }
     }
-    internal class GeologistExcavatorItemBonus : GeologistItemBonus
+    class GeologistExcavatorItemBonus : GeologistItemBonus
     {
         public GeologistExcavatorItemBonus()
         {
-            SkillType = DefaultSkillTypes.Mining;
-            ItemBonusType = ItemBonusType.GeologistExcavatorMoreGeodes;
+            SkillId = SkillsList.DefaultSkillNames.Mining;
+            Profession = ItemBonusProfession.GeologistExcavatorMoreGeodes;
             ItemCategories = DefaultItemCategories.Any;
             Items = DefaultItems.Geodes;
         }
     }
-    internal class GeologistGemologistItemBonus : GeologistItemBonus
+    class GeologistGemologistItemBonus : GeologistItemBonus
     {
         public GeologistGemologistItemBonus()
         {
-            SkillType = DefaultSkillTypes.Mining;
-            ItemBonusType = ItemBonusType.GeologistGemologistGemsWorthMore;
+            SkillId = SkillsList.DefaultSkillNames.Mining;
+            Profession = ItemBonusProfession.GeologistGemologistGemsWorthMore;
             ItemCategories = DefaultItemCategories.GemsOrMinerals;
             Items = DefaultItems.Any;
         }
     }
 
-    internal static class MiningItemBonuses
+    class MiningItemBonuses : IItemBonusesRegistration
     {
-        public static List<MinerItemBonus> MinerItemBonuses => new List<MinerItemBonus>
+        public List<MinerItemBonus> MinerItemBonuses => new List<MinerItemBonus>
         {
             new MinerItemBonus
             {
@@ -129,7 +129,7 @@ namespace LevelExtender.Framework.ItemBonus
                 Chance = 0.25
             },
         };
-        public static List<MinerBlacksmithItemBonus> MinerBlacksmithItemBonuses => new List<MinerBlacksmithItemBonus>
+        public List<MinerBlacksmithItemBonus> MinerBlacksmithItemBonuses => new List<MinerBlacksmithItemBonus>
         {
             new MinerBlacksmithItemBonus
             {
@@ -157,7 +157,7 @@ namespace LevelExtender.Framework.ItemBonus
                 Value = 110
             },
         };
-        public static List<MinerProspectorItemBonus> MinerProspectorItemBonuses => new List<MinerProspectorItemBonus>
+        public List<MinerProspectorItemBonus> MinerProspectorItemBonuses => new List<MinerProspectorItemBonus>
         {
             new MinerProspectorItemBonus
             {
@@ -190,7 +190,7 @@ namespace LevelExtender.Framework.ItemBonus
                 Value = 15
             },
         };
-        public static List<GeologistItemBonus> GeologistItemBonuses => new List<GeologistItemBonus>
+        public List<GeologistItemBonus> GeologistItemBonuses => new List<GeologistItemBonus>
         {
             new GeologistItemBonus
             {
@@ -223,7 +223,7 @@ namespace LevelExtender.Framework.ItemBonus
                 Value = 3
             },
         };
-        public static List<GeologistExcavatorItemBonus> GeologistExcavatorItemBonuses => new List<GeologistExcavatorItemBonus>
+        public List<GeologistExcavatorItemBonus> GeologistExcavatorItemBonuses => new List<GeologistExcavatorItemBonus>
         {
             new GeologistExcavatorItemBonus
             {
@@ -256,7 +256,7 @@ namespace LevelExtender.Framework.ItemBonus
                 Value = 4
             },
         };
-        public static List<GeologistGemologistItemBonus> GeologistGemologistItemBonuses => new List<GeologistGemologistItemBonus>
+        public List<GeologistGemologistItemBonus> GeologistGemologistItemBonuses => new List<GeologistGemologistItemBonus>
         {
             new GeologistGemologistItemBonus
             {
@@ -284,29 +284,16 @@ namespace LevelExtender.Framework.ItemBonus
                 Value = 70
             },
         };
-        public static bool ApplyMoreDrops(IEnumerable<LESkill> skills, StardewValley.Object item)
+        public List<IEnumerable<ItemBonusBySkillData>> RegisterItemBonuses()
         {
-            /// TODO: I'm sure this can be optimized :) ... skip Professions with no "Item Drop Rate" etc.
-            var ret = false;
-            ret = ItemBonuses.ApplyMoreDrops(MinerItemBonuses, skills, item) || ret;
-            ret = ItemBonuses.ApplyMoreDrops(MinerBlacksmithItemBonuses, skills, item) || ret;
-            ret = ItemBonuses.ApplyMoreDrops(MinerProspectorItemBonuses, skills, item) || ret;
-            ret = ItemBonuses.ApplyMoreDrops(GeologistItemBonuses, skills, item) || ret;
-            ret = ItemBonuses.ApplyMoreDrops(GeologistExcavatorItemBonuses, skills, item) || ret;
-            ret = ItemBonuses.ApplyMoreDrops(GeologistGemologistItemBonuses, skills, item) || ret;
-            return ret;
-        }
-        public static bool ApplyWorthMore(IEnumerable<LESkill> skills, StardewValley.Object item, long specificPlayerID, ref int newprice)
-        {
-            /// TODO: I'm sure this can be optimized :) ... skip Professions with no "Item Worth More" etc.
-            var ret = false;
-            ret = ItemBonuses.ApplyWorthMore(MinerItemBonuses, skills, item, specificPlayerID, ref newprice) || ret;
-            ret = ItemBonuses.ApplyWorthMore(MinerBlacksmithItemBonuses, skills, item, specificPlayerID, ref newprice) || ret;
-            ret = ItemBonuses.ApplyWorthMore(MinerProspectorItemBonuses, skills, item, specificPlayerID, ref newprice) || ret;
-            ret = ItemBonuses.ApplyWorthMore(GeologistItemBonuses, skills, item, specificPlayerID, ref newprice) || ret;
-            ret = ItemBonuses.ApplyWorthMore(GeologistExcavatorItemBonuses, skills, item, specificPlayerID, ref newprice) || ret;
-            ret = ItemBonuses.ApplyWorthMore(GeologistGemologistItemBonuses, skills, item, specificPlayerID, ref newprice) || ret;
-            return ret;
+            return new List<IEnumerable<ItemBonusBySkillData>> {
+                MinerItemBonuses.Cast<ItemBonusBySkillData>(),
+                MinerBlacksmithItemBonuses.Cast<ItemBonusBySkillData>(),
+                MinerProspectorItemBonuses.Cast<ItemBonusBySkillData>(),
+                GeologistItemBonuses.Cast<ItemBonusBySkillData>(),
+                GeologistExcavatorItemBonuses.Cast<ItemBonusBySkillData>(),
+                GeologistGemologistItemBonuses.Cast<ItemBonusBySkillData>(),
+            };
         }
     }
 }

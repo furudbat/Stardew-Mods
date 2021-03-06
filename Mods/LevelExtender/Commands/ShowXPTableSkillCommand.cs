@@ -21,7 +21,7 @@ namespace LevelExtender.Commands
             }
 
             string skill_name = args[0];
-            var skill = Mod.Skills.FirstOrDefault(s => s.Name.ToLower() == skill_name.ToLower());
+            var skill = Mod.VanillaSkills.FirstOrDefault(s => s.Name.ToLower() == skill_name.ToLower());
             if (skill != null)
             {
                 Logger.LogInformation($"Skill ${skill.Name}, LvL: {skill.Level}, XP: {skill.XP}");

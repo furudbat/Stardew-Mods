@@ -4,8 +4,6 @@ using System.Linq;
 using System.Reflection;
 using Harmony;
 using LevelExtender.Framework;
-using LevelExtender.Framework.SkillTypes;
-using LevelExtender.LEAPI;
 using LevelExtender.Logging;
 using LevelExtender.Patches;
 using StardewModdingAPI;
@@ -85,7 +83,6 @@ namespace LevelExtender
                 configMenuApi.RegisterSimpleOption(ModManifest, "Noti. in HUB", "Show Notification in HUB, otherwise in Chat.", () => Config.DrawNotificationsAsHUDMessage, (bool val) => Config.DrawNotificationsAsHUDMessage = val);
                 configMenuApi.RegisterSimpleOption(ModManifest, "Min. Item Price For Noti.", "Show Extra Item Notifications with minimum Item Price.", () => Config.MinItemPriceForNotifications, (int val) => Config.MinItemPriceForNotifications = val);
             }
-            LEModHandler.Initialise(this.Monitor);
 
             // register commands
             if (Config.TestingMode)
@@ -122,7 +119,7 @@ namespace LevelExtender
 
             if (levelExtender.Skills.Count >= 5)
             {
-                levelExtender.UpdateSkillXP();
+                levelExtender.UpdateVanillaSkillsXP();
             }
             if (Config.OverworldMonsters && e.IsMultipleOf(3600))
             {
@@ -161,7 +158,7 @@ namespace LevelExtender
         }
         private void onSaved(object sender, EventArgs e)
         {
-            this.Helper.Data.WriteJsonFile($"data/{Constants.SaveFolderName}.json", Data);
+
         }
         private void onReturnedToTitle(object sender, EventArgs e)
         {
@@ -196,30 +193,6 @@ namespace LevelExtender
             Logger.LogInformation("Registering commands...");
             SMAPICommand<ILevelExtender>.RegisterCommands(levelExtender, this.Config, this.Monitor, this.Helper.ConsoleCommands, false);
             Logger.LogInformation("Commands registered.");
-        }
-
-        private void RestoreLevels()
-        {
-            var farming = SkillsList.DefaultSkills.FirstOrDefault(s => s.Type == DefaultSkillTypes.Farming);
-            var fishing = SkillsList.DefaultSkills.FirstOrDefault(s => s.Type == DefaultSkillTypes.Fishing);
-            var foraging = SkillsList.DefaultSkills.FirstOrDefault(s => s.Type == DefaultSkillTypes.Foraging);
-            var mining = SkillsList.DefaultSkills.FirstOrDefault(s => s.Type == DefaultSkillTypes.Mining);
-            var combat = SkillsList.DefaultSkills.FirstOrDefault(s => s.Type == DefaultSkillTypes.Combat);
-
-            farming?.SetSkillExperience(Math.Max(Data.FaXP, farming?.GetSkillExperience() ?? 0));
-            farming?.SetSkillLevel(Math.Max(Data.FaLV, farming?.GetSkillLevel() ?? 0));
-
-            fishing?.SetSkillExperience(Math.Max(Data.FXP, fishing?.GetSkillExperience() ?? 0));
-            fishing?.SetSkillLevel(Math.Max(Data.FLV, fishing?.GetSkillLevel() ?? 0));
-
-            foraging?.SetSkillExperience(Math.Max(Data.FoXP, foraging?.GetSkillExperience() ?? 0));
-            foraging?.SetSkillLevel(Math.Max(Data.FoLV, foraging?.GetSkillLevel() ?? 0));
-
-            mining?.SetSkillExperience(Math.Max(Data.MXP, mining?.GetSkillExperience() ?? 0));
-            mining?.SetSkillLevel(Math.Max(Data.MLV, mining?.GetSkillLevel() ?? 0));
-
-            combat?.SetSkillExperience(Math.Max(Data.MXP, combat?.GetSkillExperience() ?? 0));
-            combat?.SetSkillLevel(Math.Max(Data.MLV, combat?.GetSkillLevel() ?? 0));
         }
 
         private LevelExtender levelExtender;

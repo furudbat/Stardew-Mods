@@ -3,11 +3,14 @@
   "Author": "Devin Lematty",
   "Version": "2.0.0-unofficial.1-furudbat",
   "Description": "Extends profession levels to 100.",
-  "UniqueID": "Unidarkshin.LevelExtender",
+  "UniqueID": "FurudBat.LevelExtender",
   "EntryDll": "LevelExtender.dll",
   "MinimumApiVersion": "3.7",
-  "UpdateKeys": [ "Nexus:1471" ],
+  "UpdateKeys": [ "Nexus:1471", "GitHub:furudbat/Stardew-Mods" ],
   "Dependencies": [
+    {
+      "UniqueID": "spacechase0.SpaceCore"
+    },
     {
       "UniqueID": "spacechase0.GenericModConfigMenu",
       "IsRequired": false

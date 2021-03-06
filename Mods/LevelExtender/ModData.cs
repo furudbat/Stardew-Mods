@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace LevelExtender
 {
+    /// <summary>
+    ///  Old Mod Data (not nused)
+    /// </summary>
     [Serializable]
     public class ModData {
         // Fishing
@@ -20,7 +23,7 @@ namespace LevelExtender
         public int MXP { get; set; } = 0;
         public int MLV { get; set; } = 0;
 
-        //Combat
+        // Combat
         public int CXP { get; set; } = 0;
         public int CLV { get; set; } = 0;
 

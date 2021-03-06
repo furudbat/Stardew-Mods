@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using LevelExtender.Framework;
+﻿using LevelExtender.Framework;
 using LevelExtender.Logging;
 
 namespace LevelExtender.Commands

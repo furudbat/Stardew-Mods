@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Timers;
-using LevelExtender.Framework.SkillTypes;
 using LevelExtender.Framework;
 using LevelExtender.Framework.ItemBonus;
-using LevelExtender.LEAPI;
 using LevelExtender.Logging;
 using LevelExtender.UIElements;
 using Microsoft.Xna.Framework;
@@ -18,11 +16,11 @@ using StardewValley.Tools;
 
 namespace LevelExtender
 {
-    public class LevelExtender : ILevelExtender, ILEModApi
+    internal class LevelExtender : ILevelExtender
     {
         public ModConfig Config { get; set; }
         public Logger Logger { get; private set; }
-        public List<LESkill> Skills { get; private set; }
+        public List<BaseSkill> Skills { get; private set; }
         public double MonstersSpawnRate { get; set; }
         public List<Monster> Monsters { get; private set; }
         public bool NoMonsters
@@ -39,15 +37,10 @@ namespace LevelExtender
             this.Config = config;
             this.helper = helper;
             Logger = new Logger(config, logMonitor);
-            Skills = new List<LESkill>();
+            Skills = new List<BaseSkill>();
             Monsters = new List<Monster>();
             MonstersSpawnRate = -1;
             ResetXPBar();
-        }
-
-        public void RegisterMod(ISkillMod mod, IMonitor logMonitor)
-        {
-            LEModHandler.RegisterMod(mod, logMonitor);
         }
 
         public event EventHandler<LEXPEventArgs> OnXPChanged
@@ -66,7 +59,7 @@ namespace LevelExtender
             var ret = new List<int>();
             foreach (var skill in Skills)
             {
-                ret.Add(skill.XP);
+                ret.Add(skill.GetExperienceFor(Game1.player));
             }
             return ret.ToArray();
         }
@@ -76,63 +69,43 @@ namespace LevelExtender
             var ret = new List<int>();
             foreach (var skill in Skills)
             {
-                ret.Add(skill.RequiredXPNextLevel);
+                ret.Add(skill.GetRequiredXPNextLevel(Game1.player));
             }
             return ret.ToArray();
         }
-        public IEnumerable<ILESkill> GetSkills()
+        public IEnumerable<ISkill> GetSkills()
         {
-            return Skills.Cast<ILESkill>();
+            return Skills.Cast<ISkill>();
         }
-        public int GetSkillCurrentXP(string skillName)
+        public int GetSkillCurrentXP(string skillId)
         {
-            var skill = Skills.FirstOrDefault(s => s.Name == skillName);
-            return (skill != null) ? skill.XP : -1;
+            var skill = Skills.FirstOrDefault(s => s.Id == skillId);
+            return (skill != null) ? skill.GetExperienceFor(Game1.player) : -1;
         }
-        public int GetSkillRequiredXP(string skillName)
+        public int GetSkillRequiredXP(string skillId)
         {
-            var skill = Skills.FirstOrDefault(s => s.Name == skillName);
-            return (skill != null) ? skill.RequiredXPNextLevel : -1;
+            var skill = Skills.FirstOrDefault(s => s.Id == skillId);
+            return (skill != null) ? skill.GetRequiredXPNextLevel(Game1.player) : -1;
         }
-        public int GetSkillLevel(string skillName)
+        public int GetSkillLevel(string skillId)
         {
-            var skill = Skills.FirstOrDefault(s => s.Name == skillName);
-            return (skill != null) ? skill.Level : -1;
+            var skill = Skills.FirstOrDefault(s => s.Id == skillId);
+            return (skill != null) ? skill.GetSkillLevel(Game1.player) : -1;
         }
-        public int GetSkillMaxLevel(string skillName)
+        public int GetSkillMaxLevel(string skillId)
         {
-            var skill = Skills.FirstOrDefault(s => s.Name == skillName);
+            var skill = Skills.FirstOrDefault(s => s.Id == skillId);
             return (skill != null) ? skill.MaxLevel : -1;
         }
-        public int GetXPRequiredToLevel(string skillName, int level)
+        public int GetXPRequiredToLevel(string skillId, int level)
         {
-            var skill = Skills.FirstOrDefault(s => s.Name == skillName);
+            var skill = Skills.FirstOrDefault(s => s.Id == skillId);
             return (skill != null && level >= 0 && level < skill.XPTable.Count && level <= skill.MaxLevel) ? skill.XPTable[level] : (skill != null) ? skill.MaxXP : -1;
         }
 
-        public bool SetLevel(string name, int value)
+        public bool SetNeededXPFactor(string skillId, double value)
         {
-            var skill = Skills.FirstOrDefault(s => s.Name == name);
-            if (skill != null)
-            {
-                skill.Level = value;
-                return true;
-            }
-            return false;
-        }
-        public bool SetXP(string name, int value)
-        {
-            var skill = Skills.FirstOrDefault(s => s.Name == name);
-            if (skill != null)
-            {
-                skill.XP = value;
-                return true;
-            }
-            return false;
-        }
-        public bool SetNeededXPFactor(string name, double value)
-        {
-            var skill = Skills.FirstOrDefault(s => s.Name == name);
+            var skill = Skills.FirstOrDefault(s => s.Id == skillId);
             if (skill != null)
             {
                 skill.NeededXPFactor = value;
@@ -165,22 +138,43 @@ namespace LevelExtender
         {
             extraItemCategories.Clear();
             Skills.Clear();
-            /// @TODO: add SpaceCore skills (?)
-            foreach (var skill in SkillsList.AllSkills)
+            foreach (var skill in SkillsList.DefaultSkills)
             {
-                double xp_factor = (skill.Type == DefaultSkillTypes.Fishing)? 0.5 : 1.0;
-                if (skill.Type == DefaultSkillTypes.Combat) {
+                double xp_factor = (skill.Name == SkillsList.DefaultSkillNames.Fishing)? 0.5 : 1.0;
+                if (skill.Name == SkillsList.DefaultSkillNames.Combat) {
                     xp_factor = 0.75;
                 }
-                LESkill leSkill = new LESkill(skill, LEEvents, xp_factor, new List<int>(REQUIRED_XP_TABLE));
+                var leSkill = new LEVanillaSkill(Game1.player, skill, LEEvents, xp_factor, new List<int>(REQUIRED_XP_TABLE));
                 Skills.Add(leSkill);
-                extraItemCategories.Add(skill.Type, new List<int>(skill.ExtraItemCategories()));
+                extraItemCategories.Add(skill.Name, new List<int>(skill.ExtraItemCategories()));
+
+                ModEntry.Logger.LogDebug($"InitSkills: vanilla skill: {leSkill.Id} {leSkill.GetName()}, lvl.  {leSkill.Level}, xp: {leSkill.XP}, {leSkill}");
             }
 
+            foreach (var scSkillName in SpaceCore.Skills.GetSkillList())
+            {
+                var skill = SpaceCore.Skills.GetSkill(scSkillName);
+                if (skill != null)
+                {
+                    var scSkill = new SCSkill(skill);
+                    Skills.Add(scSkill);
+
+                    ModEntry.Logger.LogDebug($"InitSkills: sc skill: {scSkill.Id} {scSkill.GetName()}, lvl.  {scSkill.GetSkillLevel(Game1.player)}, xp: {scSkill.GetExperienceFor(Game1.player)}, {scSkill}");
+                }
+
+            }
+
+            UpdateExtraItemCategorySkillNames();
+
+            ModEntry.Logger.LogDebug($"InitSkills: skills {Skills.Count}");
+        }
+
+        private void UpdateExtraItemCategorySkillNames()
+        {
             Dictionary<int, HashSet<string>> skillNames = new Dictionary<int, HashSet<string>>();
             foreach (var cat_entry in extraItemCategories)
             {
-                var skillName = cat_entry.Key.Name;
+                var skillName = cat_entry.Key;
                 var itemCategories = cat_entry.Value;
                 foreach (var item_category in itemCategories)
                 {
@@ -195,7 +189,7 @@ namespace LevelExtender
             extraItemCategorySkillNames.Clear();
             foreach (var cat_entry in extraItemCategories)
             {
-                var skillName = cat_entry.Key.Name;
+                var skillName = cat_entry.Key;
                 var itemCategories = cat_entry.Value;
                 foreach (var itemCategory in itemCategories)
                 {
@@ -214,8 +208,6 @@ namespace LevelExtender
                     }
                 }
             }
-
-            ModEntry.Logger.LogDebug($"InitSkills: skills {Skills.Count}");
         }
 
         public void CleanUpMonters()
@@ -238,22 +230,14 @@ namespace LevelExtender
             lastMessage = "";
         }
 
-        public void UpdateSkillXP()
+        public void UpdateVanillaSkillsXP()
         {
-            foreach (var skill in SkillsList.DefaultSkills)
+            foreach (var leSkill in Skills.Where(s => s is LEVanillaSkill).Cast<LEVanillaSkill>())
             {
-                var leSkill = Skills.FirstOrDefault(s => s.Skill.Type == skill.Type);
-
-                if (leSkill == null)
-                {
-                    Logger.LogError($"Skill {skill.Type} not registered properly for exp gain, please restart and/or report if no change.");
-                    continue;
-                }
-
-                var skillXP = skill.GetSkillExperience();
+                var skillXP = leSkill.Skill.GetSkillExperience();
                 if (leSkill.XP != skillXP)
                 {
-                    Logger.LogDebug($"gain XP {leSkill.XP} -> {skillXP}");
+                    Logger.LogDebug($"gain XP {leSkill.GetExperienceFor(Game1.player)} -> {skillXP}");
                     leSkill.XP = skillXP;
                 }
             }
@@ -291,8 +275,8 @@ namespace LevelExtender
         {
             get
             {
-                var skill = Skills.FirstOrDefault(s => s.Type == DefaultSkillTypes.Combat);
-                var combatLevel = (skill != null) ? skill.Level : Game1.player.CombatLevel;
+                var skill = Skills.FirstOrDefault(s => s.Id == SkillsList.DefaultSkillNames.Combat);
+                var combatLevel = (skill != null) ? skill.GetSkillLevel(Game1.player) : Game1.player.CombatLevel;
 
                 if (combatLevel == 0)
                 {
@@ -317,10 +301,12 @@ namespace LevelExtender
             }
         }
 
+        public List<LEVanillaSkill> VanillaSkills => Skills.Where(s => s is LEVanillaSkill).Cast<LEVanillaSkill>().ToList();
+
         public void UpdateBobberBar()
         {
-            var skill = Skills.FirstOrDefault(s => s.Type == DefaultSkillTypes.Fishing);
-            var fishingLevel = (skill != null) ? skill.Level : Game1.player.FishingLevel;
+            var skill = Skills.FirstOrDefault(s => s.Id == SkillsList.DefaultSkillNames.Fishing);
+            var fishingLevel = (skill != null) ? skill.GetSkillLevel(Game1.player) : Game1.player.FishingLevel;
 
             if (Game1.activeClickableMenu is BobberBar && !firstFade)
             {
@@ -538,8 +524,11 @@ namespace LevelExtender
         {
             if (hoeDirt.crop == null || hoeDirt.crop.dead.Value)
                 return;
-            
-            FarmingItemBonuses.ApplyCropGrow(Skills, hoeDirt);
+
+            foreach (var itemBonuses in ItemBonuses.RegisteredItemBonuses)
+            {
+                ItemBonuses.ApplyCropGrow(Game1.player, itemBonuses.Where(ib => ib.BonusType == ItemBonusType.CropsGrowFaster).ToList(), Skills, hoeDirt);
+            }
         }
 
         private bool ItemsMoreDrops(StardewValley.Object obj)
@@ -547,12 +536,10 @@ namespace LevelExtender
             if (obj == null || obj.HasBeenInInventory)
                 return true;
 
-            FarmingItemBonuses.ApplyMoreDrops(Skills, obj);
-            MiningItemBonuses.ApplyMoreDrops(Skills, obj);
-            ForagingItemBonuses.ApplyMoreDrops(Skills, obj);
-            FishingItemBonuses.ApplyMoreDrops(Skills, obj);
-
-            FarmingItemBonuses.ApplyBetterQuality(Skills, obj);
+            foreach (var itemBonuses in ItemBonuses.RegisteredItemBonuses)
+            {
+                ItemBonuses.ApplyMoreDrops(Game1.player, itemBonuses.Where(ib => ib.BonusType == ItemBonusType.MoreDrops).ToList(), Skills, obj);
+            }
 
             return true;
         }
@@ -561,9 +548,22 @@ namespace LevelExtender
             if (obj == null || obj.HasBeenInInventory)
                 return true;
 
-            FarmingItemBonuses.ApplyBetterQuality(Skills, obj);
+            foreach (var itemBonuses in ItemBonuses.RegisteredItemBonuses)
+            {
+                ItemBonuses.ApplyBetterQuality(Game1.player, itemBonuses.Where(ib => ib.BonusType == ItemBonusType.BetterQuality).ToList(), Skills, obj);
+            }
 
             return true;
+        }
+        private void ItemsWorthMore(StardewValley.Object obj, long specificPlayerID, ref int newprice)
+        {
+            if (obj == null)
+                return;
+
+            foreach (var itemBonuses in ItemBonuses.RegisteredItemBonuses)
+            {
+                ItemBonuses.ApplyWorthMore(Game1.player, itemBonuses.Where(ib => ib.BonusType == ItemBonusType.WorthMore).ToList(), Skills, obj, specificPlayerID, ref newprice);
+            }
         }
         private bool DropExtraItems(StardewValley.Object item)
         {
@@ -581,25 +581,24 @@ namespace LevelExtender
                 if (message.Length > 0)
                     break;
 
-                var skillType = cat_entry.Key;
+                var skillName = cat_entry.Key;
                 if (!cat_entry.Value.Contains(itemCategory))
                 {
                     continue;
                 }
-                for (int i = 0; i < MAX_DOUBLE_ITEM_DROPS && ShouldDoubleItem(skillType, item); i++)
+                for (int i = 0; i < MAX_DOUBLE_ITEM_DROPS && ShouldDoubleItem(skillName, item); i++)
                 {
                     item.Stack += 1;
-                    message = ShowExtraItemDropMessage(skillType, originalItemStack, item);
+                    message = ShowExtraItemDropMessage(skillName, originalItemStack, item);
                 }
             }
 
             return true;
         }
 
-        private string ShowExtraItemDropMessage(SkillType skillType, int originalItemStack, Item item)
+        private string ShowExtraItemDropMessage(string skillName, int originalItemStack, Item item)
         {
             int itemCategory = item.Category;
-            string skillName = skillType.Name;
             if (extraItemCategorySkillNames.ContainsKey(itemCategory))
             {
                 skillName = extraItemCategorySkillNames[itemCategory];
@@ -639,16 +638,6 @@ namespace LevelExtender
 
             // add more "sellToStorePrice"-Handler here
         }
-        private void ItemsWorthMore(StardewValley.Object obj, long specificPlayerID, ref int newprice)
-        {
-            if (obj == null)
-                return;
-
-            FarmingItemBonuses.ApplyWorthMore(Skills, obj, specificPlayerID, ref newprice);
-            MiningItemBonuses.ApplyWorthMore(Skills, obj, specificPlayerID, ref newprice);
-            ForagingItemBonuses.ApplyWorthMore(Skills, obj, specificPlayerID, ref newprice);
-            FishingItemBonuses.ApplyWorthMore(Skills, obj, specificPlayerID, ref newprice);
-        }
 
         public void RemoveMonsters()
         {
@@ -662,8 +651,8 @@ namespace LevelExtender
         }
         public void RandomCropGrows()
         {
-            var skill = Skills.FirstOrDefault(s => s.Type == DefaultSkillTypes.Farming);
-            var farmingLevel = (skill != null) ? skill.Level : Game1.player.FarmingLevel;
+            var skill = Skills.FirstOrDefault(s => s.Id == SkillsList.DefaultSkillNames.Farming);
+            var farmingLevel = (skill != null) ? skill.GetSkillLevel(Game1.player) : Game1.player.FarmingLevel;
 
             Farm farm = Game1.getFarm();
             double growCompletelyChance = farmingLevel * 0.0002;
@@ -687,10 +676,10 @@ namespace LevelExtender
             }
         }
 
-        private bool ShouldDoubleItem(SkillType skillType, StardewValley.Object item)
+        private bool ShouldDoubleItem(string skillId, StardewValley.Object item)
         {
-            double drop_rate = (skillType == DefaultSkillTypes.Farming || skillType == DefaultSkillTypes.Foraging) ? 0.002 / 2.0 : 0.002;
-            var skill = Skills.FirstOrDefault(s => s.Skill.Type == skillType);
+            double drop_rate = (skillId == SkillsList.DefaultSkillNames.Farming || skillId == SkillsList.DefaultSkillNames.Foraging) ? 0.002 / 2.0 : 0.002;
+            var skill = Skills.FirstOrDefault(s => s.Id == skillId);
             if (item.Stack >= 2)
             {
                 drop_rate = drop_rate / (3.0 * item.Stack / 4.0);
@@ -699,13 +688,13 @@ namespace LevelExtender
             {
                 drop_rate /= (item.Quality + 1);
             }
-            return skill != null && item.Stack > 0 && Game1.random.NextDouble() <= ((skill.Level * drop_rate) + ((double)Game1.player.DailyLuck / 1200.0 + 9.9999997473787516E-05));
+            return skill != null && item.Stack > 0 && Game1.random.NextDouble() <= ((skill.GetSkillLevel(Game1.player) * drop_rate) + ((double)Game1.player.DailyLuck / 1200.0 + 9.9999997473787516E-05));
         }
 
         private Monster GenerateMonster(int tier, Monster monster)
         {
-            var skill = Skills.FirstOrDefault(s => s.Type == DefaultSkillTypes.Combat);
-            var combatLevel = (skill != null) ? skill.Level : Game1.player.CombatLevel;
+            var skill = Skills.FirstOrDefault(s => s.Id == SkillsList.DefaultSkillNames.Combat);
+            var combatLevel = (skill != null) ? skill.GetSkillLevel(Game1.player) : Game1.player.CombatLevel;
 
             if (tier == 8)
             {
@@ -784,13 +773,47 @@ namespace LevelExtender
             cooldownLastMessage.Enabled = true;
         }
 
+        public void SetItemCategories(string skillName, IEnumerable<int> itemCategories)
+        {
+            var skill = Skills.FirstOrDefault(s => s.Id == skillName);
+            if (skill != null) {
+                skill.ItemCategories = itemCategories.ToList();
+            }
+        }
+
+        public void RegisterItemBonuses(IEnumerable<ItemBonusBySkillData> values)
+        {
+            ItemBonuses.RegisterItemBonus(values);
+        }
+
+        public bool SetVanillaLevel(string skillId, int value)
+        {
+            var skill = Skills.Where(s => s is LEVanillaSkill).Cast<LEVanillaSkill>().FirstOrDefault(s => s.Id == skillId);
+            if (skill != null) {
+                skill.Level = value;
+                return true;
+            }
+            return false;
+        }
+
+        public bool SetVanillaXP(string skillId, int value)
+        {
+            var skill = Skills.Where(s => s is LEVanillaSkill).Cast<LEVanillaSkill>().FirstOrDefault(s => s.Id == skillId);
+            if (skill != null)
+            {
+                skill.XP = value;
+                return true;
+            }
+            return false;
+        }
+
         private readonly IModHelper helper;
         private readonly LEEvents LEEvents = new LEEvents();
         private ExtendedExperienceBar XPBar;
         private Timer cooldownLastMessage;
         private bool firstFade = false;
         private string lastMessage = "";
-        private readonly Dictionary<SkillType, List<int>> extraItemCategories = new Dictionary<SkillType, List<int>>();
+        private readonly Dictionary<string, List<int>> extraItemCategories = new Dictionary<string, List<int>>();
         private readonly Dictionary<int, string> extraItemCategorySkillNames = new Dictionary<int, string>();
     }
 

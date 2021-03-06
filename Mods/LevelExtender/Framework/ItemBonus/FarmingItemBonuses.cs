@@ -1,58 +1,57 @@
 ﻿using System.Collections.Generic;
-using LevelExtender.Framework.SkillTypes;
-using StardewValley.TerrainFeatures;
+using System.Linq;
 
 namespace LevelExtender.Framework.ItemBonus
 {
-    internal class TillerItemBonus : ItemBonusFromSkill
+    class TillerItemBonus : ItemBonusBySkillData
     {
         public TillerItemBonus()
         {
-            SkillType = DefaultSkillTypes.Farming;
-            ItemBonusType = ItemBonusType.TillerCropsWorthMore;
+            SkillId = SkillsList.DefaultSkillNames.Farming;
+            Profession = ItemBonusProfession.TillerCropsWorthMore;
             ItemCategories = DefaultItemCategories.Crops;
         }
     }
-    internal class TillerArtisanItemBonus : TillerItemBonus
+    class TillerArtisanItemBonus : TillerItemBonus
     {
         public TillerArtisanItemBonus()
         {
-            SkillType = DefaultSkillTypes.Farming;
-            ItemBonusType = ItemBonusType.TillerArtisanWorthMore;
+            SkillId = SkillsList.DefaultSkillNames.Farming;
+            Profession = ItemBonusProfession.TillerArtisanWorthMore;
             ItemCategories = DefaultItemCategories.Artisan;
         }
     }
-    internal class TillerAgriculturistItemBonus : TillerItemBonus
+    class TillerAgriculturistItemBonus : TillerItemBonus
     {
         public TillerAgriculturistItemBonus()
         {
-            SkillType = DefaultSkillTypes.Farming;
-            ItemBonusType = ItemBonusType.TillerAgriculturistCropsGrowFaster;
+            SkillId = SkillsList.DefaultSkillNames.Farming;
+            Profession = ItemBonusProfession.TillerAgriculturistCropsGrowFaster;
         }
     }
-    internal class RangerItemBonus : ItemBonusFromSkill
+    class RangerItemBonus : ItemBonusBySkillData
     {
         public RangerItemBonus()
         {
-            SkillType = DefaultSkillTypes.Farming;
-            ItemBonusType = ItemBonusType.RancherAnimalProductsWorthMore;
+            SkillId = SkillsList.DefaultSkillNames.Farming;
+            Profession = ItemBonusProfession.RancherAnimalProductsWorthMore;
             ItemCategories = DefaultItemCategories.AnimalProducts;
         }
     }
-    internal class BetterQualityCropsItemBonus : ItemBonusFromSkill
+    class BetterQualityCropsItemBonus : ItemBonusBySkillData
     {
         public BetterQualityCropsItemBonus()
         {
-            SkillType = DefaultSkillTypes.Farming;
-            ItemBonusType = ItemBonusType.BetterQuality;
+            SkillId = SkillsList.DefaultSkillNames.Farming;
+            Profession = ItemBonusProfession.BetterQuality;
             ItemCategories = DefaultItemCategories.Crops;
             ExtraItems = DefaultItems.ExtraCrops;
         }
     }
 
-    internal static class FarmingItemBonuses
+    class FarmingItemBonuses : IItemBonusesRegistration
     {
-        public static List<TillerItemBonus> TillerItemBonuses => new List<TillerItemBonus>
+        public List<TillerItemBonus> TillerItemBonuses => new List<TillerItemBonus>
         {
             new TillerItemBonus
             {
@@ -85,7 +84,7 @@ namespace LevelExtender.Framework.ItemBonus
                 Value = 80
             },
         };
-        public static List<TillerArtisanItemBonus> ArsianItemBonuses => new List<TillerArtisanItemBonus>
+        public List<TillerArtisanItemBonus> ArsianItemBonuses => new List<TillerArtisanItemBonus>
         {
             new TillerArtisanItemBonus
             {
@@ -113,7 +112,7 @@ namespace LevelExtender.Framework.ItemBonus
                 Value = 110
             },
         };
-        public static List<RangerItemBonus> RangerItemBonuses => new List<RangerItemBonus>
+        public List<RangerItemBonus> RangerItemBonuses => new List<RangerItemBonus>
         {
             new RangerItemBonus
             {
@@ -146,96 +145,96 @@ namespace LevelExtender.Framework.ItemBonus
                 Value = 80
             },
         };
-        public static List<BetterQualityCropsItemBonus> BetterQualityCropsItemBonuses => new List<BetterQualityCropsItemBonus>
+        public List<BetterQualityCropsItemBonus> BetterQualityCropsItemBonuses => new List<BetterQualityCropsItemBonus>
         {
             new BetterQualityCropsItemBonus
             {
                 MinLevel = 15,
                 Values = {
-                    new ItemBonusFromSkillValue { Chance = 0.38, Value = ItemQuality.Silver },
-                    new ItemBonusFromSkillValue { Chance = 0.23, Value = ItemQuality.Gold },
+                    new ItemBonusValue { Chance = 0.38, Value = ItemQuality.Silver },
+                    new ItemBonusValue { Chance = 0.23, Value = ItemQuality.Gold },
                 }
             },
             new BetterQualityCropsItemBonus
             {
                 MinLevel = 20,
                 Values = {
-                    new ItemBonusFromSkillValue { Chance = 0.44, Value = ItemQuality.Silver },
-                    new ItemBonusFromSkillValue { Chance = 0.25, Value = ItemQuality.Gold },
+                    new ItemBonusValue { Chance = 0.44, Value = ItemQuality.Silver },
+                    new ItemBonusValue { Chance = 0.25, Value = ItemQuality.Gold },
                 }
             },
             new BetterQualityCropsItemBonus
             {
                 MinLevel = 30,
                 Values = {
-                    new ItemBonusFromSkillValue { Chance = 0.60, Value = ItemQuality.Silver },
-                    new ItemBonusFromSkillValue { Chance = 0.33, Value = ItemQuality.Gold },
-                    new ItemBonusFromSkillValue { Chance = 0.01, Value = ItemQuality.Irudium },
+                    new ItemBonusValue { Chance = 0.60, Value = ItemQuality.Silver },
+                    new ItemBonusValue { Chance = 0.33, Value = ItemQuality.Gold },
+                    new ItemBonusValue { Chance = 0.01, Value = ItemQuality.Irudium },
                 }
             },
             new BetterQualityCropsItemBonus
             {
                 MinLevel = 40,
                 Values = {
-                    new ItemBonusFromSkillValue { Chance = 0.75, Value = ItemQuality.Silver },
-                    new ItemBonusFromSkillValue { Chance = 0.45, Value = ItemQuality.Gold },
-                    new ItemBonusFromSkillValue { Chance = 0.05, Value = ItemQuality.Irudium },
+                    new ItemBonusValue { Chance = 0.75, Value = ItemQuality.Silver },
+                    new ItemBonusValue { Chance = 0.45, Value = ItemQuality.Gold },
+                    new ItemBonusValue { Chance = 0.05, Value = ItemQuality.Irudium },
                 }
             },
             new BetterQualityCropsItemBonus
             {
                 MinLevel = 50,
                 Values = {
-                    new ItemBonusFromSkillValue { Chance = 0.89, Value = ItemQuality.Silver },
-                    new ItemBonusFromSkillValue { Chance = 0.55, Value = ItemQuality.Gold },
-                    new ItemBonusFromSkillValue { Chance = 0.09, Value = ItemQuality.Irudium },
+                    new ItemBonusValue { Chance = 0.89, Value = ItemQuality.Silver },
+                    new ItemBonusValue { Chance = 0.55, Value = ItemQuality.Gold },
+                    new ItemBonusValue { Chance = 0.09, Value = ItemQuality.Irudium },
                 }
             },
             new BetterQualityCropsItemBonus
             {
                 MinLevel = 60,
                 Values = {
-                    new ItemBonusFromSkillValue { Chance = 1.0, Value = ItemQuality.Silver },
-                    new ItemBonusFromSkillValue { Chance = 0.65, Value = ItemQuality.Gold },
-                    new ItemBonusFromSkillValue { Chance = 0.14, Value = ItemQuality.Irudium },
+                    new ItemBonusValue { Chance = 1.0, Value = ItemQuality.Silver },
+                    new ItemBonusValue { Chance = 0.65, Value = ItemQuality.Gold },
+                    new ItemBonusValue { Chance = 0.14, Value = ItemQuality.Irudium },
                 }
             },
             new BetterQualityCropsItemBonus
             {
                 MinLevel = 70,
                 Values = {
-                    new ItemBonusFromSkillValue { Chance = 1.0, Value = ItemQuality.Silver },
-                    new ItemBonusFromSkillValue { Chance = 0.75, Value = ItemQuality.Gold },
-                    new ItemBonusFromSkillValue { Chance = 0.18, Value = ItemQuality.Irudium },
+                    new ItemBonusValue { Chance = 1.0, Value = ItemQuality.Silver },
+                    new ItemBonusValue { Chance = 0.75, Value = ItemQuality.Gold },
+                    new ItemBonusValue { Chance = 0.18, Value = ItemQuality.Irudium },
                 }
             },
             new BetterQualityCropsItemBonus
             {
                 MinLevel = 80,
                 Values = {
-                    new ItemBonusFromSkillValue { Chance = 1.0, Value = ItemQuality.Gold },
-                    new ItemBonusFromSkillValue { Chance = 0.25, Value = ItemQuality.Irudium },
+                    new ItemBonusValue { Chance = 1.0, Value = ItemQuality.Gold },
+                    new ItemBonusValue { Chance = 0.25, Value = ItemQuality.Irudium },
                 }
             },
             new BetterQualityCropsItemBonus
             {
                 MinLevel = 90,
                 Values = {
-                    new ItemBonusFromSkillValue { Chance = 1.0, Value = ItemQuality.Gold },
-                    new ItemBonusFromSkillValue { Chance = 0.38, Value = ItemQuality.Irudium },
+                    new ItemBonusValue { Chance = 1.0, Value = ItemQuality.Gold },
+                    new ItemBonusValue { Chance = 0.38, Value = ItemQuality.Irudium },
                 }
             },
             new BetterQualityCropsItemBonus
             {
                 MinLevel = 100,
                 Values = {
-                    new ItemBonusFromSkillValue { Chance = 1.0, Value = ItemQuality.Gold },
-                    new ItemBonusFromSkillValue { Chance = 0.51, Value = ItemQuality.Irudium },
+                    new ItemBonusValue { Chance = 1.0, Value = ItemQuality.Gold },
+                    new ItemBonusValue { Chance = 0.51, Value = ItemQuality.Irudium },
                 }
             },
         };
 
-        public static List<TillerAgriculturistItemBonus> TillerAgriculturistItemBonuses => new List<TillerAgriculturistItemBonus>
+        public List<TillerAgriculturistItemBonus> TillerAgriculturistItemBonuses => new List<TillerAgriculturistItemBonus>
         {
             new TillerAgriculturistItemBonus
             {
@@ -284,34 +283,14 @@ namespace LevelExtender.Framework.ItemBonus
             },
         };
 
-        public static bool ApplyMoreDrops(IEnumerable<LESkill> skills, StardewValley.Object item)
+        public List<IEnumerable<ItemBonusBySkillData>> RegisterItemBonuses()
         {
-            var ret = false;
-            ret = ItemBonuses.ApplyMoreDrops(TillerItemBonuses, skills, item) || ret;
-            ret = ItemBonuses.ApplyMoreDrops(ArsianItemBonuses, skills, item) || ret;
-            ret = ItemBonuses.ApplyMoreDrops(RangerItemBonuses, skills, item) || ret;
-            return ret;
-        }
-        public static bool ApplyWorthMore(IEnumerable<LESkill> skills, StardewValley.Object item, long specificPlayerID, ref int newprice)
-        {
-            var ret = false;
-            ret = ItemBonuses.ApplyWorthMore(TillerItemBonuses, skills, item, specificPlayerID, ref newprice) || ret;
-            ret = ItemBonuses.ApplyWorthMore(ArsianItemBonuses, skills, item, specificPlayerID, ref newprice) || ret;
-            ret = ItemBonuses.ApplyWorthMore(RangerItemBonuses, skills, item, specificPlayerID, ref newprice) || ret;
-            return ret;
-        }
-        public static bool ApplyBetterQuality(IEnumerable<LESkill> skills, StardewValley.Object item)
-        {
-            var ret = false;
-            ret = ItemBonuses.ApplyBetterQuality(BetterQualityCropsItemBonuses, skills, item) || ret;
-            return ret;
-        }
-
-        internal static bool ApplyCropGrow(List<LESkill> skills, HoeDirt hoeDirt)
-        {
-            var ret = false;
-            ret = ItemBonuses.ApplyCropGrow(TillerAgriculturistItemBonuses, skills, hoeDirt) || ret;
-            return ret;
+            return new List<IEnumerable<ItemBonusBySkillData>> {
+                TillerItemBonuses.Cast<ItemBonusBySkillData>(),
+                ArsianItemBonuses.Cast<ItemBonusBySkillData>(),
+                BetterQualityCropsItemBonuses.Cast<ItemBonusBySkillData>(),
+                TillerAgriculturistItemBonuses.Cast<ItemBonusBySkillData>(),
+            };
         }
     }
 }
