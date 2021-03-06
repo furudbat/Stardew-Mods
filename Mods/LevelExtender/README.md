@@ -41,7 +41,7 @@ The mod will...
 
 ## Config
 
-~~A `username_(numbers).json` will appear in the mod's folder after you run the game once. It is **STRONGLY** recommended to not change anything in this file. It has a very high chance of causing corruption with the mod files. ~~
+~~A `username_(numbers).json` will appear in the mod's folder after you run the game once. It is **STRONGLY** recommended to not change anything in this file. It has a very high chance of causing corruption with the mod files.~~
 Use the config.json or [Generic Mod Config Menu](https://www.nexusmods.com/stardewvalley/mods/5098)
 
 ## Compatibility
