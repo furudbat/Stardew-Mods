@@ -15,6 +15,9 @@
 * [Versions](#versions)
 ----------------------------------------------------------
 ## LevelExtender
+
+### see [README](Mods/LevelExtender/README.md) in LevelExtender for new Features
+
 [**Level Extender**](https://www.nexusmods.com/stardewvalley/mods/1471) is a [Stardew Valley](http://stardewvalley.net/) mod which extends the level cap to 100.
 ## LE Install
 1. [Install the latest version of SMAPI](https://smapi.io).

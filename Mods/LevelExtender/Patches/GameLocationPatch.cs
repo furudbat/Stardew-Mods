@@ -1,6 +1,6 @@
 ﻿using System;
 using Harmony;
-using LevelExtender.Common;
+using LevelExtender.Framework;
 using Microsoft.Xna.Framework;
 using StardewValley;
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
-using LevelExtender.LEAPI;
+using LevelExtender.Framework;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
@@ -45,9 +45,9 @@ namespace LevelExtender.UIElements
         private int _requiredXPNextLevel = -1;
         private int _maxSkillLevel = -1;
 
-        private readonly ILEModApi _levelExtender;
+        private readonly ILevelExtender _levelExtender;
 
-        public ExtendedExperienceBar(IModHelper helper, ILEModApi levelExtender)
+        public ExtendedExperienceBar(IModHelper helper, ILevelExtender levelExtender)
         {
             _helper = helper;
             _timeToDisappear.Elapsed += StopTimerAndFadeBarOut;
@@ -55,7 +55,7 @@ namespace LevelExtender.UIElements
             _helper.Events.Player.Warped += PlayerOnWarped;
             _helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
             _levelExtender = levelExtender;
-            foreach (var skill in _levelExtender.GetSkills())
+            foreach (var skill in _levelExtender.VanillaSkills)
             {
                 _lastXPs.Add(skill.Name, skill.XP);
             }
@@ -149,28 +149,36 @@ namespace LevelExtender.UIElements
                 return;
 
             Item currentItem = Game1.player.CurrentItem;
-            if (_previousItem != currentItem)
+            if (currentItem != null && _previousItem != currentItem)
             {
                 string skillName;
                 if (currentItem is FishingRod)
                 {
-                    skillName = DefaultSkillNames.Fishing;
+                    skillName = SkillsList.DefaultSkillNames.Fishing;
                 }
                 else if (currentItem is Pickaxe)
                 {
-                    skillName = DefaultSkillNames.Mining;
+                    skillName = SkillsList.DefaultSkillNames.Mining;
                 }
-                else if (currentItem is MeleeWeapon && currentItem.Name != "Scythe")
+                else if (currentItem is MeleeWeapon && currentItem.Name != "Scythe" && currentItem.Name != "Golden Scythe")
                 {
-                    skillName = DefaultSkillNames.Combat;
+                    skillName = SkillsList.DefaultSkillNames.Combat;
+                }
+                else if (currentItem is MeleeWeapon && (currentItem.Name == "Scythe" || currentItem.Name == "Golden Scythe"))
+                {
+                    skillName = SkillsList.DefaultSkillNames.Farming;
+                }
+                else if (currentItem.Name == "Watering Can" || currentItem.Name == "Cooper Watering Can" || currentItem.Name == "Steel Watering Can" || currentItem.Name == "Gold Watering Can" || currentItem.Name == "Iridium Watering Can")
+                {
+                    skillName = SkillsList.DefaultSkillNames.Farming;
                 }
                 else if (Game1.currentLocation is Farm && !(currentItem is Axe))
                 {
-                    skillName = DefaultSkillNames.Farming;
+                    skillName = SkillsList.DefaultSkillNames.Farming;
                 }
                 else
                 {
-                    skillName = DefaultSkillNames.Foraging;
+                    skillName = SkillsList.DefaultSkillNames.Foraging;
                 }
                 int xp = _levelExtender.GetSkillCurrentXP(skillName);
                 int skillLevel = _levelExtender.GetSkillLevel(skillName);
@@ -238,11 +246,11 @@ namespace LevelExtender.UIElements
                 string skillName = "";
                 switch (e.Skill)
                 {
-                    case StardewModdingAPI.Enums.SkillType.Combat: skillName = DefaultSkillNames.Combat; break;
-                    case StardewModdingAPI.Enums.SkillType.Farming: skillName = DefaultSkillNames.Farming; break;
-                    case StardewModdingAPI.Enums.SkillType.Fishing: skillName = DefaultSkillNames.Fishing; break;
-                    case StardewModdingAPI.Enums.SkillType.Foraging: skillName = DefaultSkillNames.Foraging; break;
-                    case StardewModdingAPI.Enums.SkillType.Mining: skillName = DefaultSkillNames.Mining; break;
+                    case StardewModdingAPI.Enums.SkillType.Combat: skillName = SkillsList.DefaultSkillNames.Combat; break;
+                    case StardewModdingAPI.Enums.SkillType.Farming: skillName = SkillsList.DefaultSkillNames.Farming; break;
+                    case StardewModdingAPI.Enums.SkillType.Fishing: skillName = SkillsList.DefaultSkillNames.Fishing; break;
+                    case StardewModdingAPI.Enums.SkillType.Foraging: skillName = SkillsList.DefaultSkillNames.Foraging; break;
+                    case StardewModdingAPI.Enums.SkillType.Mining: skillName = SkillsList.DefaultSkillNames.Mining; break;
                 }
                 int skillLevel = e.NewLevel;
                 int xp = _levelExtender.GetSkillCurrentXP(skillName);
@@ -321,6 +329,8 @@ namespace LevelExtender.UIElements
                     int currentExperience = _currentXP - _requiredXPPrevLevel;
                     int progressBarWidth = (maxExperience > 0) ? (int)((double)currentExperience / maxExperience * MaxBarWidth) : 0;
 
+                    ModEntry.Logger.LogDebug($"DrawExperienceBar: max exp. {maxExperience}, xp: {currentExperience}, bar width: {progressBarWidth}");
+
                     DrawExperienceBar(progressBarWidth, _currentSkillLevel, currentExperience, maxExperience, _maxSkillLevel);
                 }
             }
@@ -336,35 +346,35 @@ namespace LevelExtender.UIElements
 
             switch (currentLevelSkillName)
             {
-                case DefaultSkillNames.Farming:
+                case SkillsList.DefaultSkillNames.Farming:
                     {
                         _experienceFillColor = new Color(255, 251, 35, 0.38f);
                         _experienceIconPosition.X = 10;
                         break;
                     }
 
-                case DefaultSkillNames.Fishing:
+                case SkillsList.DefaultSkillNames.Fishing:
                     {
                         _experienceFillColor = new Color(17, 84, 252, 0.63f);
                         _experienceIconPosition.X = 20;
                         break;
                     }
 
-                case DefaultSkillNames.Foraging:
+                case SkillsList.DefaultSkillNames.Foraging:
                     {
                         _experienceFillColor = new Color(0, 234, 0, 0.63f);
                         _experienceIconPosition.X = 60;
                         break;
                     }
 
-                case DefaultSkillNames.Mining:
+                case SkillsList.DefaultSkillNames.Mining:
                     {
                         _experienceFillColor = new Color(145, 104, 63, 0.63f);
                         _experienceIconPosition.X = 30;
                         break;
                     }
 
-                case DefaultSkillNames.Combat:
+                case SkillsList.DefaultSkillNames.Combat:
                     {
                         _experienceFillColor = new Color(204, 0, 3, 0.63f);
                         _experienceIconPosition.X = 120;
@@ -458,8 +468,8 @@ namespace LevelExtender.UIElements
             {
                 string strCurrentExperience = currentExperience.ToString();
                 string strMaxExperience = maxExperience.ToString();
-                strCurrentExperience = (currentExperience >= 10000) ? strCurrentExperience.Substring(0, strCurrentExperience.Length - 4) : strCurrentExperience;
-                strMaxExperience = (maxExperience >= 10000) ? maxExperience.ToString().Substring(0, strMaxExperience.Length - 4) : strMaxExperience;
+                strCurrentExperience = (currentExperience >= 10000) ? strCurrentExperience.Substring(0, strCurrentExperience.Length - 3) : strCurrentExperience;
+                strMaxExperience = (maxExperience >= 10000) ? maxExperience.ToString().Substring(0, strMaxExperience.Length - 3) : strMaxExperience;
 
                 string txtCurrentExperience = (currentExperience >= 10000) ? I18n.KAmountWithUnit(amount: strCurrentExperience) : strCurrentExperience;
                 string txtMaxExperience = (maxExperience >= 10000) ? I18n.KAmountWithUnit(amount: strMaxExperience) : strMaxExperience;

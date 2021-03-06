@@ -1,5 +1,4 @@
-﻿using LevelExtender.Common;
-using LevelExtender.Framework;
+﻿using LevelExtender.Framework;
 using LevelExtender.Logging;
 
 namespace LevelExtender.Commands
@@ -25,7 +24,7 @@ namespace LevelExtender.Commands
                 return;
             }
 
-            string skill_name = args[0];
+            string skillName = args[0].ToLower();
             int value;
             bool validLevel = int.TryParse(args[1], out value);
             if (!validLevel && value >= 0)
@@ -34,14 +33,14 @@ namespace LevelExtender.Commands
                 return;
             }
 
-            var succ = Mod.SetLevel(skill_name, value);
+            var succ = Mod.SetVanillaLevel(skillName, value);
             if (succ)
             {
-                Logger.LogInformation($"SetLevelCommand: Set skill Level for {skill_name} to {value}");
+                Logger.LogInformation($"SetLevelCommand: Set skill Level for {skillName} to {value}");
             }
             else
             {
-                Logger.LogInformation($"SetLevelCommand: Can't find skill {args[0]}");
+                Logger.LogInformation($"SetLevelCommand: Can't find skill {skillName} (must be vanilla skill)");
             }
         }
 

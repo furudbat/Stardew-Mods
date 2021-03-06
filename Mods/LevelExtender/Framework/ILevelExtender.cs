@@ -1,22 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
+using LevelExtender.Framework.ItemBonus;
 using LevelExtender.Logging;
 using Microsoft.Xna.Framework;
 using StardewValley;
 using StardewValley.TerrainFeatures;
 
-namespace LevelExtender.Common
+namespace LevelExtender.Framework
 {
-    internal interface ILevelExtender
+    interface ILevelExtender : Api
     {
         Logger Logger { get; }
 
-        bool SetLevel(string name, int value);
-        bool SetXP(string name, int value);
         bool SetNeededXPFactor(string name, double value);
 
-        List<LESkill> Skills { get; }
+        List<BaseSkill> Skills { get; }
+        List<LEVanillaSkill> VanillaSkills { get; }
         ModConfig EditConfig(Action<ModConfig> func);
+
+        bool SetVanillaLevel(string skillId, int value);
+        bool SetVanillaXP(string skillId, int value);
 
         bool damageMonster_Prefix(
           GameLocation currentLocation,

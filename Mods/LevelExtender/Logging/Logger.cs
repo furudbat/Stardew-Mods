@@ -3,7 +3,7 @@ using StardewModdingAPI;
 
 namespace LevelExtender.Logging
 {
-    internal class Logger
+    public class Logger
     {
         public ModConfig Config { get; private set; }
         public IMonitor LogMonitor { get; private set; }

@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Harmony;
-using LevelExtender.Common;
 using LevelExtender.Framework;
-using LevelExtender.LEAPI;
 using LevelExtender.Logging;
 using LevelExtender.Patches;
 using StardewModdingAPI;
@@ -19,6 +17,7 @@ namespace LevelExtender
     internal class ModEntry : Mod, IAssetEditor
     {
         public ModConfig Config { get; private set; }
+        public ModData Data { get; private set; }
         public static Logger Logger { get; private set; }
         public override void Entry(IModHelper helper)
         {
@@ -51,6 +50,7 @@ namespace LevelExtender
             events.GameLoop.UpdateTicked += this.onUpdateTicked;
             events.GameLoop.SaveLoaded += this.onSaveLoaded;
             events.GameLoop.Saving += this.onSaving;
+            events.GameLoop.Saved += this.onSaved;
             events.GameLoop.ReturnedToTitle += this.onReturnedToTitle;
             events.GameLoop.DayStarted += this.onDayStarted;
         }
@@ -72,20 +72,17 @@ namespace LevelExtender
                 configMenuApi.RegisterSimpleOption(ModManifest, "Drop Extra Items", "Drops more Items/Harvest. (randomly, depending on your Skill-Levels)", () => Config.DropExtraItemsByLevel, (bool val) => Config.DropExtraItemsByLevel = val);
                 configMenuApi.RegisterSimpleOption(ModManifest, "Extent Profession Affects", "Drops more Items/Harvest, Crops worth more and other Profession-based increases. (based on your Profession (like Tiller) and extending 10+ Skill-Level Professions)", () => Config.DropExtraItemsByProfession, (bool val) => Config.DropExtraItemsByProfession = val);
                 configMenuApi.RegisterSimpleOption(ModManifest, "Better Item Quality", "Adds better Item-Quality when Harvesting. (depending on your Skill-Level, pass Level. 13)", () => Config.BetterItemQuality, (bool val) => Config.BetterItemQuality = val);
-
+                configMenuApi.RegisterChoiceOption(ModManifest, "Crops Grow", "Affect Crops grow, add fix grow phase or randomly full grown", () => Config.CropsGrow.ToString(), (string val) => Config.CropsGrow = (CropsGrowOption)Enum.Parse(typeof(CropsGrowOption), val), Enum.GetNames(typeof(CropsGrowOption)));
                 configMenuApi.RegisterSimpleOption(ModManifest, "Fishing Overhaul", "Extending Bobber Bar Height. (depending on your Fishing-Skill-Level)", () => Config.FishingOverhaul, (bool val) => Config.FishingOverhaul = val);
-
                 configMenuApi.RegisterSimpleOption(ModManifest, "Extra Overworld Monsters", "Monsters spawn random on the Overworld.", () => Config.OverworldMonsters, (bool val) => Config.OverworldMonsters = val);
 
                 configMenuApi.RegisterLabel(ModManifest, "Notifications", "Notifications and Display XP Bars");
                 configMenuApi.RegisterSimpleOption(ModManifest, "Show XP Bars", "Enable XP Bar, like in Ui-Info-Suite", () => Config.DrawXPBars, (bool val) => Config.DrawXPBars = val);
                 configMenuApi.RegisterSimpleOption(ModManifest, "Show XP Gain", "Show Gained XP, like in Ui-Info-Suite", () => Config.DrawXPGain, (bool val) => Config.DrawXPGain = val);
-                configMenuApi.RegisterSimpleOption(ModManifest, "Extra Item Noti. Message", "Shows Message when gets Extra Items from Drops, see 'Enable Drop Extra Items'", () => Config.DrawExtraItemNotifications, (bool val) => Config.DrawExtraItemNotifications = val);
-                //configMenuApi.RegisterSimpleOption(ModManifest, "Noti. in HUB", "Show Notification in HUB, otherwise in Chat.", () => Config.DrawNotificationsAsHUDMessage, (bool val) => Config.DrawNotificationsAsHUDMessage = val);
+                configMenuApi.RegisterChoiceOption(ModManifest, "Extra Item Noti. Message", "Shows Message when gets Extra Items from Drops", () => Config.DrawExtraItemNotifications.ToString(), (string val) => Config.DrawExtraItemNotifications = (DrawExtraItemNotificationsOption) Enum.Parse(typeof(DrawExtraItemNotificationsOption), val), Enum.GetNames(typeof(DrawExtraItemNotificationsOption)));
+                configMenuApi.RegisterSimpleOption(ModManifest, "Noti. in HUB", "Show Notification in HUB, otherwise in Chat.", () => Config.DrawNotificationsAsHUDMessage, (bool val) => Config.DrawNotificationsAsHUDMessage = val);
                 configMenuApi.RegisterSimpleOption(ModManifest, "Min. Item Price For Noti.", "Show Extra Item Notifications with minimum Item Price.", () => Config.MinItemPriceForNotifications, (int val) => Config.MinItemPriceForNotifications = val);
-                configMenuApi.RegisterSimpleOption(ModManifest, "Extra Item Noti. with Amount", "Show Extra Item Notification with Extra Item Amount, otherwise shows only a simple message.", () => Config.ExtraItemNotificationAmountMessage, (bool val) => Config.ExtraItemNotificationAmountMessage = val);
             }
-            LEModHandler.Initialise(this.Monitor);
 
             // register commands
             if (Config.TestingMode)
@@ -122,7 +119,7 @@ namespace LevelExtender
 
             if (levelExtender.Skills.Count >= 5)
             {
-                levelExtender.UpdateSkillXP();
+                levelExtender.UpdateVanillaSkillsXP();
             }
             if (Config.OverworldMonsters && e.IsMultipleOf(3600))
             {
@@ -148,6 +145,9 @@ namespace LevelExtender
 
         private void onSaveLoaded(object sender, SaveLoadedEventArgs e)
         {
+            Data = this.Helper.Data.ReadJsonFile<ModData>($"data/{Constants.SaveFolderName}.json") ?? new ModData();
+            //RestoreLevels();
+
             levelExtender.InitMod();
             Helper.Content.InvalidateCache("Data/Fish");
         }
@@ -155,6 +155,10 @@ namespace LevelExtender
         private void onSaving(object sender, EventArgs e)
         {
             levelExtender.RemoveMonsters();
+        }
+        private void onSaved(object sender, EventArgs e)
+        {
+
         }
         private void onReturnedToTitle(object sender, EventArgs e)
         {
@@ -168,7 +172,7 @@ namespace LevelExtender
                 System.Environment.Exit(1);
             }
 
-            if (Config.CropsGrow == CropGrowOption.RandomByLevel)
+            if (Config.CropsGrow == CropsGrowOption.RandomByLevel)
             {
                 levelExtender.RandomCropGrows();
             }

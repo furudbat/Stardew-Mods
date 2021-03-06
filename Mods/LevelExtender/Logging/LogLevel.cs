@@ -1,6 +1,6 @@
 namespace LevelExtender.Logging
 {
-    internal enum LogLevel
+    public enum LogLevel
     {
         Critical = 1,
         Error = 2,

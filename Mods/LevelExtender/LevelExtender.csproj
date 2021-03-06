@@ -34,6 +34,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup>
     <ModFolderName>LevelExtender</ModFolderName>
@@ -59,48 +60,46 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands\DebugModeCommand.cs" />
+    <Compile Include="Commands\SetLevelCommand.cs" />
     <Compile Include="Commands\SetXPCommand.cs" />
     <Compile Include="Commands\ShowXPTableSkillCommand.cs" />
-    <Compile Include="Commands\SetLevelCommand.cs" />
     <Compile Include="Commands\LegacySetNeededXPFactorCommand.cs" />
     <Compile Include="Commands\LegacyToggleOverworldMonstersCommand.cs" />
-    <Compile Include="Commands\LegacySetLevelCommand.cs" />
     <Compile Include="Commands\LegacyShowXPTableCommand.cs" />
-    <Compile Include="Common\LESkill.cs" />
+    <Compile Include="Framework\BaseSkill.cs" />
+    <Compile Include="Framework\ISkill.cs" />
+    <Compile Include="Framework\ItemBonus\IItemBonusesRegistration.cs" />
+    <Compile Include="Framework\LEVanillaSkill.cs" />
     <Compile Include="Framework\ItemBonus\FishingItemBonuses.cs" />
     <Compile Include="Framework\ItemBonus\ForagingItemBonuses.cs" />
     <Compile Include="Framework\ItemBonus\MiningItemBonuses.cs" />
     <Compile Include="Framework\ItemBonus\ItemBonuses.cs" />
-    <Compile Include="Framework\ItemBonus\ItemBonusFromSkill.cs" />
+    <Compile Include="Framework\ItemBonus\ItemBonusBySkill.cs" />
     <Compile Include="Framework\ItemBonus\FarmingItemBonuses.cs" />
+    <Compile Include="Framework\SCSkill.cs" />
     <Compile Include="Framework\SkillsList.cs" />
     <Compile Include="I18n.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>I18n.tt</DependentUpon>
     </Compile>
-    <Compile Include="LEAPI\LEEvents.cs" />
     <Compile Include="Framework\SMAPICommand.cs" />
-    <Compile Include="GenericModConfigMenuAPI.cs" />
-    <Compile Include="Common\ILevelExtender.cs" />
-    <Compile Include="LEAPI\ILESkill.cs" />
-    <Compile Include="LEAPI\LEModApi.cs" />
+    <Compile Include="IGenericModConfigMenuAPI.cs" />
+    <Compile Include="Framework\ILevelExtender.cs" />
+    <Compile Include="Api.cs" />
     <Compile Include="LevelExtender.cs" />
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="Logging\LogLevel.cs" />
     <Compile Include="ModConfig.cs" />
+    <Compile Include="ModData.cs" />
     <Compile Include="ModEntry.cs" />
-    <Compile Include="LEAPI\ISkillMod.cs" />
-    <Compile Include="Framework\Mods\LEModHandler.cs" />
     <Compile Include="Patches\HoeDirtPlantPatch.cs" />
     <Compile Include="Patches\ObjectSellToStorePricePatch.cs" />
     <Compile Include="Patches\FarmerPatch.cs" />
     <Compile Include="Patches\GameLocationPatch.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="LEAPI\Skill.cs" />
-    <Compile Include="Framework\SkillTypes\DefaultSkillTypes.cs" />
-    <Compile Include="LEAPI\SkillType.cs" />
-    <Compile Include="SpaceCoreAPI.cs" />
+    <Compile Include="Framework\VanillaSkill.cs" />
     <Compile Include="UIElements\ExperiencePointDisplay.cs" />
     <Compile Include="UIElements\ExtendedExperienceBar.cs" />
     <Compile Include="Extensions.cs" />
@@ -119,6 +118,7 @@
     <None Include="i18n\tr.json" />
     <None Include="i18n\zh.json" />
     <None Include="Manifest.json" />
+    <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Pathoschild.Stardew.ModBuildConfig">
@@ -130,6 +130,10 @@
     <PackageReference Include="System.Runtime.Serialization.Json">
       <Version>4.3.0</Version>
     </PackageReference>
+    <Reference Include="SpaceCore">
+      <HintPath>$(GamePath)\Mods\SpaceCore\SpaceCore.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="I18n.tt">

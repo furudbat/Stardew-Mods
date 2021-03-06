@@ -1,6 +1,6 @@
-﻿using LevelExtender.Common;
-using LevelExtender.Framework;
+﻿using LevelExtender.Framework;
 using LevelExtender.Logging;
+using StardewValley;
 
 namespace LevelExtender.Commands
 {
@@ -17,7 +17,7 @@ namespace LevelExtender.Commands
 
             foreach (var skill in Mod.Skills)
             {
-                Logger.LogInformation($"{skill.Name} | {skill.Level} | {skill.XP} | {skill.RequiredXPNextLevel}");
+                Logger.LogInformation($"{skill.Id} | {skill.GetSkillLevel(Game1.player)} | {skill.GetSkillLevel(Game1.player)} | {skill.GetRequiredXPNextLevel(Game1.player)}");
             }
         }
 

@@ -1,36 +1,36 @@
 ﻿using System.Collections.Generic;
-using LevelExtender.Common;
+using System.Linq;
 
 namespace LevelExtender.Framework.ItemBonus
 {
-    internal class GathererItemBonus : ItemBonusFromSkill
+    class GathererItemBonus : ItemBonusBySkillData
     {
         public GathererItemBonus()
         {
-            SkillType = SkillTypes.DefaultSkillTypes.Foraging;
-            ItemBonusType = ItemBonusType.GathererMoreForage;
-            ItemCategories = DefaultItemCategories.Foraging;
+            SkillId = SkillsList.DefaultSkillNames.Foraging;
+            Profession = ItemBonusProfession.GathererMoreForage;
+            ItemCategories = DefaultItemCategories.GreensForaging;
         }
     }
-    internal class ForesterTapperItemBonus : ItemBonusFromSkill
+    class ForesterTapperItemBonus : ItemBonusBySkillData
     {
         public ForesterTapperItemBonus()
         {
-            SkillType = SkillTypes.DefaultSkillTypes.Foraging;
-            ItemBonusType = ItemBonusType.ForesterTapperSyrupWorthMore;
+            SkillId = SkillsList.DefaultSkillNames.Foraging;
+            Profession = ItemBonusProfession.ForesterTapperSyrupWorthMore;
             ItemCategories = DefaultItemCategories.Syrup;
         }
     }
 
-    internal static class ForagingItemBonuses
+    class ForagingItemBonuses
     {
-        public static List<GathererItemBonus> GathererItemBonuses => new List<GathererItemBonus>
+        public List<GathererItemBonus> GathererItemBonuses => new List<GathererItemBonus>
         {
             new GathererItemBonus
             {
                 MinLevel = 10,
                 Chance = 0.25,
-                Value = 25
+                Value = 2
             },
             new GathererItemBonus
             {
@@ -63,7 +63,7 @@ namespace LevelExtender.Framework.ItemBonus
                 Value = 4
             },
         };
-        public static List<ForesterTapperItemBonus> ForesterTapperItemBonuses => new List<ForesterTapperItemBonus>
+        public List<ForesterTapperItemBonus> ForesterTapperItemBonuses => new List<ForesterTapperItemBonus>
         {
             new ForesterTapperItemBonus
             {
@@ -91,19 +91,12 @@ namespace LevelExtender.Framework.ItemBonus
                 Value = 50
             },
         };
-        public static bool ApplyMoreDrops(IEnumerable<LESkill> skills, StardewValley.Object item)
+        public List<IEnumerable<ItemBonusBySkillData>> RegisterItemBonuses()
         {
-            var ret = false;
-            ret = ItemBonuses.ApplyMoreDrops(GathererItemBonuses, skills, item) || ret;
-            ret = ItemBonuses.ApplyMoreDrops(ForesterTapperItemBonuses, skills, item) || ret;
-            return ret;
-        }
-        public static bool ApplyWorthMore(IEnumerable<LESkill> skills, StardewValley.Object item, long specificPlayerID, ref int newprice)
-        {
-            var ret = false;
-            ret = ItemBonuses.ApplyWorthMore(GathererItemBonuses, skills, item, specificPlayerID, ref newprice) || ret;
-            ret = ItemBonuses.ApplyWorthMore(ForesterTapperItemBonuses, skills, item, specificPlayerID, ref newprice) || ret;
-            return ret;
+            return new List<IEnumerable<ItemBonusBySkillData>> {
+                GathererItemBonuses.Cast<ItemBonusBySkillData>(),
+                ForesterTapperItemBonuses.Cast<ItemBonusBySkillData>(),
+            };
         }
     }
 }
